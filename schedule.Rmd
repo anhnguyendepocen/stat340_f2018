@@ -39,7 +39,7 @@ contents,
 
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week1", TRUE, "Week 1: Sep 5 -- 7",
-"Chapters 1-3: Overview, Review of Simple Linear Regression, Intro to R
+"Chapters 1-3: Overview, Review of Simple Linear Regression, Polynomial Regression, MSE, Bias/Variance Trade-off, Train/Test Errors
 
 #### Wed, Sept 5
 
@@ -73,11 +73,21 @@ make_week_box("week1", TRUE, "Week 1: Sep 5 -- 7",
 
 #### Fri, Sept 7
   * **In class**, we will work on:
-    * Material from: Section 2.2.2 and the part of 3.3.2 titled \"Non-linear Relationships\" of ISLR (to be continued next week)
-    * Polynomial regression
+    * Material from: Section 2.2.2, 3.1, and the part of 3.3.2 titled \"Non-linear Relationships\" of ISLR (to be continued next week)
+    * How do we estimate the coefficients in simple linear regression?
+    * Polynomial regression: [pdf]()
+    * First thoughts about graphical and numeric comparison of candidate models
     * Train/Test Set Errors
-    * Mean Squared Error and the Bias-Variance Trade-Off
-    * Intro to R
+    * Mean Squared Error and the Bias-Variance Trade-Off (depending on time; may be deferred to next week)
+    * Time to get started on Lab01 (go to https://github.com/mhc-stat340-f2018 to find your repository)
+ * **After class**, please:
+    * **Read**:
+        * Sections 3.2, 3.3, and 3.4 of ISLR (we will be discussing these throughout next week, not all on Monday)
+        * Chapter 3 of R4DS: http://r4ds.had.co.nz/data-visualisation.html
+    * **Homework**:
+        * Finish **Homework 1** if not done yet
+        * **Homework 2 due Monday, Sept 10**: Data Camp assignment about ggplot2 (will be assigned by end of day Friday Sept 7)
+        * Start on **Homework 3 due Friday, Sept 14**: R markdown assignment to be submitted via GitHub (will be assigned by end of day Saturday Sept 8)
 "
 )
 ```
@@ -85,8 +95,14 @@ make_week_box("week1", TRUE, "Week 1: Sep 5 -- 7",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week2", FALSE, "Week 2: Sep 10 -- 14",
 "
+Chapter 3: Multiple Regression
 
 #### Mon, Sep 10
+  * **In class**, we will work on (some combination of...):
+    * Multiple Regression
+    * Data visualization with ggplot2
+    * Time for polynomial regression lab
+    * Possibly start on a lab about multiple regression
 
 #### Wed, Sep 12
 
