@@ -8,3 +8,11 @@ title: "Homework"
 |    1         | 4 sections from the "Intro to R" course on    | 9/10/2018 |  0.5  |
 |              | Data Camp. Graded for completion only.        |           |       |
 +--------------+-----------------------------------------------+-----------+-------+
+|    2         | 4 sections from the                           | 9/12/2018 |  0.5  |
+|              | "Data Visualization with ggplot2" course on   |           |       |
+|              | Data Camp. Graded for completion only.        |           |       |
++--------------+-----------------------------------------------+-----------+-------+
+|    3         | Chapter 2, SLR and Polynomial Regression.     | 9/17/2018 |  1    |
+|              | To be assigned and submitted on GitHub.       |           |       |
+|              | Will be assigned on 9/10.                     |           |       |
++--------------+-----------------------------------------------+-----------+-------+
