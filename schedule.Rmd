@@ -38,7 +38,7 @@ contents,
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week1", TRUE, "Week 1: Sep 5 -- 7",
+make_week_box("week1", FALSE, "Week 1: Sep 5 -- 7",
 "Chapters 1-3: Overview, Review of Simple Linear Regression, Polynomial Regression, MSE, Bias/Variance Trade-off, Train/Test Errors
 
 #### Wed, Sept 5
@@ -99,13 +99,30 @@ Chapter 3: Multiple Regression
 
 #### Mon, Sep 10
   * **In class**, we will work on:
-    * Mean Squared Error and the Bias-Variance Trade-Off
-    * First thoughts about Multiple Regression
+    * Mean Squared Error and the Bias-Variance Trade-Off.  [pdf](materials/20180910_MSE_Bias_Var_Pairs_Plots/20180910_Example_2_MSE_Bias_Variance.pdf)
+    * Pairs plots with `GGally::ggpairs`.  [pdf](materials/20180910_MSE_Bias_Var_Pairs_Plots/20180910_Pairs_Plots.pdf)
     * Lab01 (go to https://github.com/mhc-stat340-f2018 to find your repository)
+ * **After class**, please:
+    * **Read**:
+        * Sections 3.2, 3.3, and 3.4 of ISLR (we will be discussing these throughout this week)
+        * Chapter 3 of R4DS: http://r4ds.had.co.nz/data-visualisation.html
+    * **Homework**:
+        * **Homework 2 due Wednesday, Sept 12**: Data Camp assignment about ggplot2
+        * **Homework 3 due Monday, Sept 17**: To be assigned on GitHub by end of day today.
 
 #### Wed, Sep 12
+ * **In class**, we will work on:
+    * Multiple Linear Regression with quantitative explanatory variables
+ * **After class**, please:
+    * **Homework**:
+        * **Homework 3 due Monday, Sept 17**
 
 #### Fri, Sep 14
+ * **In class**, we will work on:
+    * Multiple Linear Regression with quantitative and categorical explanatory variables
+ * **After class**, please:
+    * **Homework**:
+        * **Homework 3 due Monday, Sept 17**
 "
   )
 ```
