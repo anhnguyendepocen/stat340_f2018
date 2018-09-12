@@ -108,21 +108,22 @@ Chapter 3: Multiple Regression
         * Chapter 3 of R4DS: http://r4ds.had.co.nz/data-visualisation.html
     * **Homework**:
         * **Homework 2 due Wednesday, Sept 12**: Data Camp assignment about ggplot2
-        * **Homework 3 due Monday, Sept 17**: To be assigned on GitHub by end of day today.
+        * **Homework 3 due Wednesday, Sept 19**: Assigned on GitHub
 
 #### Wed, Sep 12
  * **In class**, we will work on:
-    * Multiple Linear Regression with quantitative explanatory variables
+    * Multiple Linear Regression with quantitative explanatory variables: [pdf](materials/20180912_Multiple_Regression_Quant_X/20180912_Multiple_Regression_Quant_X.pdf)
+    * Lab 02: multiple linear regression with quantitative variables.  Go to https://github.com/mhc-stat340-f2018 to find your repository.
  * **After class**, please:
     * **Homework**:
-        * **Homework 3 due Monday, Sept 17**
+        * **Homework 3 due Wednesday, Sept 19**
 
 #### Fri, Sep 14
  * **In class**, we will work on:
     * Multiple Linear Regression with quantitative and categorical explanatory variables
  * **After class**, please:
     * **Homework**:
-        * **Homework 3 due Monday, Sept 17**
+        * **Homework 3 due Wednesday, Sept 19**
 "
   )
 ```
@@ -132,6 +133,11 @@ make_week_box("week3", FALSE, "Week 3: Sep 17 -- 21",
 "
 
 #### Mon, Sep 17
+ * **In class**, we will work on:
+    * Something... maybe transformations?
+ * **After class**, please:
+    * **Homework**:
+        * **Homework 3 due Wednesday, Sept 19**
 
 #### Wed, Sep 19
 
