@@ -12,7 +12,6 @@ title: "Homework"
 |              | "Data Visualization with ggplot2" course on   |           |       |
 |              | Data Camp. Graded for completion only.        |           |       |
 +--------------+-----------------------------------------------+-----------+-------+
-|    3         | Chapter 2, SLR and Polynomial Regression.     | 9/17/2018 |  1    |
-|              | To be assigned and submitted on GitHub.       |           |       |
-|              | Will be assigned on 9/10.                     |           |       |
+|    3         | Chapter 2, SLR and Polynomial Regression.     | 9/19/2018 |  1    |
+|              | Submit on GitHub, optional hand-drawn figure. |           |       |
 +--------------+-----------------------------------------------+-----------+-------+
