@@ -99,7 +99,9 @@ Chapter 3: Multiple Regression
 
 #### Mon, Sep 10
   * **In class**, we will work on:
-    * Mean Squared Error and the Bias-Variance Trade-Off.  [pdf](materials/20180910_MSE_Bias_Var_Pairs_Plots/20180910_Example_2_MSE_Bias_Variance.pdf)
+    * Mean Squared Error and the Bias-Variance Trade-Off.
+        * Motivational example: [pdf](materials/20180910_MSE_Bias_Var_Pairs_Plots/20180910_Example_2_MSE_Bias_Variance.pdf)
+        * Lecture Notes: [pdf](materials/20180910_MSE_Bias_Var_Pairs_Plots/lecture_notes.pdf)
     * Pairs plots with `GGally::ggpairs`.  [pdf](materials/20180910_MSE_Bias_Var_Pairs_Plots/20180910_Pairs_Plots.pdf)
     * Lab01 (go to https://github.com/mhc-stat340-f2018 to find your repository)
  * **After class**, please:
@@ -120,7 +122,8 @@ Chapter 3: Multiple Regression
 
 #### Fri, Sep 14
  * **In class**, we will work on:
-    * Multiple Linear Regression with quantitative and categorical explanatory variables
+    * Overview of methods to plot estimated lines/curves using `ggplot2`: [pdf](materials/20180914_plotting_estimated_lines/20180914_plotting_estimated_lines.pdf)
+    * Lab 02: multiple linear regression with quantitative variables.  Go to https://github.com/mhc-stat340-f2018 to find your repository.
  * **After class**, please:
     * **Homework**:
         * **Homework 3 due Wednesday, Sept 19**
@@ -129,19 +132,30 @@ Chapter 3: Multiple Regression
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week3", FALSE, "Week 3: Sep 17 -- 21",
+make_week_box("week3", TRUE, "Week 3: Sep 17 -- 21",
 "
+Finishing Chapter 3
 
 #### Mon, Sep 17
  * **In class**, we will work on:
-    * Something... maybe transformations?
+    * Multiple Linear Regression with both quantitative and categorical explanatory variables
+    * Lab 03 about multiple linear regression with both quantitative and categorical explanatory variables
  * **After class**, please:
     * **Homework**:
         * **Homework 3 due Wednesday, Sept 19**
 
 #### Wed, Sep 19
+ * **In class**, we will work on:
+    * Transformations to approximate normality
+ * **After class**, please:
+    * **Read**:
+        * Section 3.5 of ISLR
+    * **Homework**:
+        * **Homework 4 due Wednesday, Sept 26**
 
 #### Fri, Sep 21
+ * **In class**, we will work on:
+    * Non-parametric regression with K nearest neighbors; curse of dimensionality
 "
   )
 ```
@@ -149,6 +163,7 @@ make_week_box("week3", FALSE, "Week 3: Sep 17 -- 21",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week4", FALSE, "Week 4: Sep 24 -- 28",
 "
+Section 2.2.3 and Sections 4.1 through 4.4: Foundations for Classification, Logistic Regression
 
 #### Mon, Sep 24
 
@@ -162,6 +177,7 @@ make_week_box("week4", FALSE, "Week 4: Sep 24 -- 28",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week5", FALSE, "Week 5: Oct 1 -- 5",
 "
+Chapter 4, Sections 4.4 and 4.6: LDA and KNN
 
 #### Mon, Oct 1
 
@@ -175,6 +191,7 @@ make_week_box("week5", FALSE, "Week 5: Oct 1 -- 5",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week6", FALSE, "Week 6: Oct 8 -- 12",
 "
+Sections 5.1 and 6.1: Variable Selection Methods
 
 #### Mon, Oct 8
  * **No Class**: mid-semester break.  Safe travels!
@@ -189,10 +206,13 @@ make_week_box("week6", FALSE, "Week 6: Oct 8 -- 12",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
 "
+Sections 5.1, 6.1, 6.3, and 6.4: Variable Selection Methods; Dimension Reduction via PCA; Problems in High Dimensions
 
 #### Mon, Oct 15
 
+
 #### Wed, Oct 17
+
 
 #### Fri, Oct 19
 "
@@ -202,6 +222,8 @@ make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week8", FALSE, "Week 8: Oct 22 -- 26",
 "
+Section 6.2: Shrinkage Methods.  Start on Sections 7.1 through 7.5: Splines
+
 #### Mon, Oct 22
 
 #### Wed, Oct 24
@@ -214,6 +236,7 @@ make_week_box("week8", FALSE, "Week 8: Oct 22 -- 26",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week9", FALSE, "Week 9: Oct 29 -- Nov 2",
 "
+Finish Sections 7.1 though 7.5: Splines
 
 #### Mon, Oct 29
 
@@ -227,6 +250,7 @@ make_week_box("week9", FALSE, "Week 9: Oct 29 -- Nov 2",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week10", FALSE, "Week 10: Nov 5 -- 9",
 "
+Section 7.6 (to be augmented with another text): GAMs
 
 #### Mon, Nov 5
 
@@ -240,6 +264,7 @@ make_week_box("week10", FALSE, "Week 10: Nov 5 -- 9",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week11", FALSE, "Week 11: Nov 12 -- 16",
 "
+More on GAMs, start on Chapter 8: Tree-based methods
 
 #### Mon, Nov 12
 
@@ -253,6 +278,7 @@ make_week_box("week11", FALSE, "Week 11: Nov 12 -- 16",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week12", FALSE, "Week 12: Nov 19 -- 23 (Thanksgiving)",
 "
+Finish Section 8.1; Thanksgiving Break
 
 #### Mon, Nov 19
 
@@ -268,6 +294,7 @@ make_week_box("week12", FALSE, "Week 12: Nov 19 -- 23 (Thanksgiving)",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week13", FALSE, "Week 13: Nov 26 -- 30",
 "
+Section 8.2
 
 #### Mon, Nov 26
 
@@ -281,6 +308,7 @@ make_week_box("week13", FALSE, "Week 13: Nov 26 -- 30",
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week14", FALSE, "Week 14: Dec 3 -- 7",
 "
+Projects and Project Presentations
 
 #### Mon, Dec 3
 

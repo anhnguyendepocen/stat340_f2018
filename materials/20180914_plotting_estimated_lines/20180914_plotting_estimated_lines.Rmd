@@ -1,0 +1,162 @@
+---
+title: "ggplot2: 3 ways to plot estimated lines"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Recall our example modeling the relationship between the number of beers someone has had and their blood alcohol content:
+
+```{r}
+library(ggplot2)
+
+beer <- read.csv("http://www.evanlray.com/data/openintro/bac.csv")
+lm_fit <- lm(BAC ~ Beers, data = beer)
+summary(lm_fit)
+```
+
+Here are two ways to make our scatter plot, both of which work equally well:
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_point()
+```
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot() +
+  geom_point(data = beer, mapping = aes(x = Beers, y = BAC))
+```
+
+We demonstrate 3 ways to add the estimated function $\widehat{f}(X) = \widehat{\beta}_0 + \widehat{\beta}_1 X$ to the scatter plot.  These are (in order from least flexible to most flexible):
+
+1. `geom_abline`: add a line with intercept `a` and slope `b`
+2. `geom_smooth`: add a smooth obtained via a specified method and formula
+3. `stat_function`: add a user-defined function
+
+# Method 1: `geom_abline`
+
+In addition to the standard `mapping` and `data` arguments, the `geom_abline` function requires us to specify:
+
+ * an `intercept` for the line
+ * a `slope` for the line
+
+These will be obtained from the estimated `coef`ficients from `lm`:
+
+```{r}
+coef(lm_fit)
+coef(lm_fit)[1]
+coef(lm_fit)[2]
+```
+
+Our final plot can be made in either of two ways:
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_point() +
+  geom_abline(intercept = coef(lm_fit)[1], slope = coef(lm_fit)[2])
+```
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot() +
+  geom_point(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_abline(intercept = coef(lm_fit)[1], slope = coef(lm_fit)[2])
+```
+
+# Method 2: `geom_smooth`
+
+In addition to the standard `mapping` and `data` arguments, the `geom_smooth` function requires us to specify:
+
+ * a `method` for obtaining the smooth.  Common choices are `lm`, `glm`, `gam`, and `loess`.  `auto` picks a flexible method depending on the sample size.
+ * a `formula` to use in obtaining the smooth.  Note that this should be specified in terms of `y` and `x`, not the names of variables in your data set.
+
+Here we are fitting a line using the `lm` function:
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x)
+```
+
+Note that if you didn't specify the `data` and `mapping` universally in the call to `ggplot`, you'll have to specify them again for `geom_smooth`!
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot() +
+  geom_point(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_smooth(method = "lm", formula = y ~ x)
+```
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot() +
+  geom_point(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_smooth(data = beer, mapping = aes(x = Beers, y = BAC), method = "lm", formula = y ~ x)
+```
+
+For the sake of demonstration, here's how you could plot a quadratic polynomial fit using `geom_smooth`.  I'm also illustrating that you can turn off the confidence interval around the smooth by setting `se = FALSE`:
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE)
+```
+
+# Method 3: `stat_function`
+
+In addition to the standard `mapping` and `data` arguments, the `stat_function` function requires us to specify:
+
+ * a `fun`ction to plot
+
+There are also some other useful optional arguments:
+
+ * `args`: a named list of arguments for the function
+ * `xlim`: range of values to plot the function over (otherwise, will be minimum and maximum of data values on horizontal axis)
+
+To demonstrate this, here are two possible ways to define an R function that calculates the predicted values from our line:
+
+```{r}
+lm_fit_predictions <- function(x) {
+  -0.0127006 + 0.0179638 * x
+}
+
+lm_fit_predictions(c(1, 2, 3, 4, 5, 6, 7, 8))
+
+lm_fit_predictions <- function(x) {
+  predict(lm_fit, data.frame(Beers = x))
+}
+
+lm_fit_predictions(c(1, 2, 3, 4, 5, 6, 7, 8))
+```
+
+Note that the function `lm_fit_predictions` that we have defined takes a vector `x` of values for the number of beers, and returns the corresponding vector of predicted values obtained from our linear model fit.
+
+We can now add a plot of this function to our scatterplot as follows:
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_point() +
+  stat_function(fun = lm_fit_predictions)
+```
+
+Note that if you didn't specify the `data` and `mapping` universally in the call to `ggplot`, you'll have to specify them again for `geom_smooth`!
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot() +
+  geom_point(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  stat_function(fun = lm_fit_predictions)
+```
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot() +
+  geom_point(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  stat_function(data = beer, mapping = aes(x = Beers, y = BAC), fun = lm_fit_predictions)
+```
+
+Here's a demonstration of `xlim`:
+
+```{r, fig.width = 2, fig.height = 1.5}
+ggplot(data = beer, mapping = aes(x = Beers, y = BAC)) +
+  geom_point() +
+  stat_function(fun = lm_fit_predictions, xlim = c(5, 8))
+```
+
