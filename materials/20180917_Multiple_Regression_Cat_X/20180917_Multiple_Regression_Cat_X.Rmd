@@ -1,0 +1,203 @@
+---
+title: "Multiple Regression with both Categorical and Quantitative Explanatory Variables"
+output: pdf_document
+geometry: margin=1.5cm
+classoption: landscape
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Recall that we are thinking about a data set with several variables recorded about 1753 movies.  We are exploring building multiple regression models for a movie's international gross earnings in inflation-adjusted 2013 dollars (`intgross_2013`) based on the following 5 explanatory variables:
+
+ 1. `budget_2013` (quantitative)
+ 2. `run_time_min` (quantitative)
+ 3. `imdb_rating` (quantitative)
+ 4. `mpaa_rating` (categorical)
+ 5. `bechdel_test_binary` (categorical)
+
+First, let's load the data in, filter to include only MPAA ratings categories with a reasonable number of movies in them, set categorical variables to factors, and apply a log transformation to `intgross_2013`, `budget_2013`, and `run_time_min`.
+
+```{r, warning=FALSE, message=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2) # general plotting functionality
+library(GGally) # includes the ggpairs function, pairs plots via ggplot2
+library(gridExtra) # for grid.arrange, which arranges the plots next to each other
+
+options(na.action = na.exclude, digits = 7)
+
+movies <- read_csv("http://www.evanlray.com/data/bechdel/bechdel.csv") %>%
+  filter(mpaa_rating %in% c("G", "PG", "PG-13", "R")) %>%
+  mutate(
+    bechdel_test = factor(bechdel_test, levels = c("nowomen", "notalk", "men", "dubious", "ok")),
+    bechdel_test_binary = factor(bechdel_test_binary, levels = c("FAIL", "PASS")),
+    mpaa_rating = factor(mpaa_rating, levels = c("G", "PG", "PG-13", "R"))
+  ) %>%
+  mutate(
+    log_intgross_2013 = log(intgross_2013),
+    log_budget_2013 = log(budget_2013),
+    log_run_time_min = log(run_time_min)
+  )
+```
+
+Our goals:
+
+ * Understand R's parameterization of linear models involving categorical variables (interpretation of fixed and interaction effects)
+ * See some examples of testing effects
+
+\newpage
+
+# 1 categorical explanatory variable (one-way ANOVA)
+
+Here are plots showing the relationship between the categorical variables and the response:
+
+```{r}
+p_mpaa <- ggplot(data = movies, mapping = aes(x = log_intgross_2013, color = mpaa_rating, linetype = mpaa_rating)) +
+  geom_density()
+
+p_bechdel <- ggplot(data = movies,
+  mapping = aes(x = log_intgross_2013, color = bechdel_test_binary, linetype = bechdel_test_binary)) +
+  geom_density()
+
+grid.arrange(p_mpaa, p_bechdel, ncol = 1)
+```
+
+## Explanatory variable has 2 categories
+
+```{r}
+movies <- movies %>% filter(!is.na(bechdel_test_binary))
+fit_bechdel <- lm(log_intgross_2013 ~ bechdel_test_binary, data = movies)
+summary(fit_bechdel)
+```
+
+#### What is the estimated equation for this fit?  Define all variables involved.
+
+\newpage
+
+#### How do the parameter estimates relate to the following R output?
+
+```{r}
+group_means <- movies %>%
+  group_by(bechdel_test_binary) %>%
+  summarize(
+    mean_log_earnings = mean(log_intgross_2013, na.rm = TRUE)
+  ) %>%
+  as.data.frame()
+group_means
+
+levels(movies$bechdel_test_binary)
+```
+
+\vspace{1cm}
+
+## Explanatory variable has >2 categories
+
+```{r}
+fit_mpaa <- lm(log_intgross_2013 ~ mpaa_rating, data = movies)
+summary(fit_mpaa)
+```
+
+
+#### What is the estimated equation for this fit?  Define all variables involved.
+
+\vspace{2cm}
+
+#### How do the parameter estimates relate to the following R output?
+
+```{r}
+group_means <- movies %>%
+  group_by(mpaa_rating) %>%
+  summarize(
+    mean_log_earnings = mean(log_intgross_2013, na.rm = TRUE)
+  ) %>%
+  as.data.frame()
+group_means
+
+levels(movies$mpaa_rating)
+```
+
+\newpage
+
+## A Cautionary Tale - Regression with Ordered Factors
+
+```{r}
+movies <- movies %>%
+  mutate(
+    bechdel_test_binary_ordered_factor = factor(bechdel_test_binary, levels = c("FAIL", "PASS"), ordered = TRUE)
+  )
+
+fit_bechdel_ordered_factor <- lm(log_intgross_2013 ~ bechdel_test_binary_ordered_factor, data = movies)
+summary(fit_bechdel_ordered_factor)
+
+movies %>%
+  group_by(bechdel_test_binary) %>%
+  summarize(
+    mean_log_earnings = mean(log_intgross_2013, na.rm = TRUE)
+  ) %>%
+  as.data.frame()
+```
+
+\newpage
+
+# Both Categorical and Quantitative Variables; no interactions
+
+First, we subset to movies where all of our candidate explanatory variables are non-missing.  This is necessary to ensure that all fits below are based on the same observations, which is needed for comparing models with `anova`.
+
+```{r}
+movies <- movies %>%
+  filter(!is.na(log_intgross_2013) & !is.na(mpaa_rating) & !is.na(bechdel_test_binary) &
+           !is.na(log_budget_2013) & !is.na(log_run_time_min) & !is.na(imdb_rating))
+```
+
+Let's try a backwards selection type strategy: we'll use all the explanatory variables we're considering, then drop variables that don't seem to be contributing much to the fit.
+
+```{r}
+fit_all_x <- lm(log_intgross_2013 ~ mpaa_rating + bechdel_test_binary + log_budget_2013 + log_run_time_min + imdb_rating,
+  data = movies)
+summary(fit_all_x)
+```
+
+This initial fit suggests that after accounting for the associations between all other explanatory variables and log earnings, a movie's run time and whether or not it passes the Bechdel test do not account for a statistically significant amount of variation in earnings.
+
+Let's conduct an F test to see whether we might drop both of these variables from the model.  We fit a reduced model and compare with `anova`:
+
+```{r}
+fit_mpaa_budget_imdb <- lm(log_intgross_2013 ~ mpaa_rating + log_budget_2013 + imdb_rating,
+  data = movies)
+anova(fit_all_x, fit_mpaa_budget_imdb)
+```
+
+#### What is the result of the test?
+
+\vspace{2cm}
+
+#### In the reduced model fit above, what's the interpretation of the estimated coefficient for `mpaa_ratingR`?
+
+\vspace{2cm}
+
+\newpage
+
+# Interactions between quantitative and categorical variables
+
+Here's a model fit that includes an interaction between `log_budget_2013` and `mpaa_rating`, as well as a call to `anova` that compares this model with the previous model that did not include interactions.
+
+```{r}
+fit_interaction <- lm(log_intgross_2013 ~ mpaa_rating + log_budget_2013 + imdb_rating + mpaa_rating:log_budget_2013,
+  data = movies)
+summary(fit_interaction)
+anova(fit_interaction, fit_mpaa_budget_imdb)
+```
+
+#### What's the estimated equation for this model?
+
+\vspace{2cm}
+
+#### In the model fit including interactions, what is the interpretation of the estimated coefficient for `mpaa_ratingPG-13:log_budget_2013`?
+
+\vspace{2cm}
+
+#### According to the hypothesis test, should we include the interaction in the model?
+
+

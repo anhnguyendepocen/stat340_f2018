@@ -138,8 +138,8 @@ Finishing Chapter 3
 
 #### Mon, Sep 17
  * **In class**, we will work on:
-    * Multiple Linear Regression with both quantitative and categorical explanatory variables
-    * Lab 03 about multiple linear regression with both quantitative and categorical explanatory variables
+    * Multiple Linear Regression with both quantitative and categorical explanatory variables: [pdf](materials/20180917_Multiple_Regression_Cat_X/20180917_Multiple_Regression_Cat_X.pdf)
+    * Lab 03 about multiple linear regression with both quantitative and categorical explanatory variables.  Go to https://github.com/mhc-stat340-f2018 to find your repository.
  * **After class**, please:
     * **Homework**:
         * **Homework 3 due Wednesday, Sept 19**
@@ -151,7 +151,7 @@ Finishing Chapter 3
     * **Read**:
         * Section 3.5 of ISLR
     * **Homework**:
-        * **Homework 4 due Wednesday, Sept 26**
+        * **Homework 4 due Friday, Sept 28**
 
 #### Fri, Sep 21
  * **In class**, we will work on:
