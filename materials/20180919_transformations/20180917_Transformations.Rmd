@@ -1,0 +1,301 @@
+---
+title: "Transformations"
+output:
+  pdf_document:
+    keep_tex: true
+geometry: margin=1.5cm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Reminder of Linear Model Assumptions (and Why)
+
+1. Relationship is linear
+    * Critical if we're using a line, but...
+    * If not, can fit a polynomial or use other methods discussed later in this class
+2. Observations are independent
+    * Necessary for inference (hypothesis test results and confidence intervals) to be correct
+    * Predictions could still be OK: as $n \rightarrow \infty$, we still will recover the correct relationship between explanatory and response variables
+3. Residuals follow a normal distribution
+    * Necessary for hypothesis test results and confidence intervals to be correct
+    * Predictions could still be OK: as $n \rightarrow \infty$, we still will recover the correct relationship between explanatory and response variables
+    * If residual distribution is not normal, estimation methods other than least squares could result in lower variance
+4. Residuals have equal variance for all observations (homoskedastic)
+    * Necessary for hypothesis test results and confidence intervals to be correct (but they might not be too far off anyways...)
+    * Predictions could still be OK: as $n \rightarrow \infty$, we still will recover the correct relationship between explanatory and response variables
+    * If residual distribution is not normal, estimation methods other than least squares could result in lower variance
+5. No outliers/observations with high leverage
+    * Could result in incorrect inferences and predictions, especially if $n$ is small.
+
+Summary: Mostly, these problems result in...
+
+ * A loss of guarantees of correct Type I Error rates for hypothesis tests
+ * A loss of guarantees of correct coverage rates for confidence intervals
+ * Higher-than-necessary variance for parameter estimates and predictions
+
+Our Goal: Fix problems with residuals (non-normal, heteroskedastic/unequal variance), and maybe also outliers.
+
+Method: Transform the variables.
+
+
+## The Ladder of Powers for Transformations
+
+* Imagine a "ladder of powers" of $y$ (or $x$): We start at $y$ and go up or down the ladder.
+
+\begin{align*}
+&\vdots \\
+&y^2 \\
+&y \\
+&\sqrt{y} \\
+&y^{``0"} \text{ (we use $\log(y)$ here)} \\
+&-1/\sqrt{y} \text{ (the $-$ keeps direction of association between $x$ and response)} \\
+&-1/y \\
+&-1/y^2 \\
+&\vdots
+\end{align*}
+
+Which direction?
+
+\newpage
+
+Idea 1: Tukey's Circle
+
+\includegraphics{tukey}
+
+Idea 2: Towards normality.
+
+ * If a variable is skewed right, move it down the ladder (pull down large values)
+ * If a variable is skewed left, move it up the ladder (pull up small values)
+
+\newpage
+
+## Example
+
+One last time, let's look at modeling a movie's international gross earnings in inflation-adjusted 2013 dollars (`intgross_2013`).  For today, let's just think about using a single quantitative explanatory variable, `budget_2013`.
+
+Here we read the data in and fit a simple linear regression model.
+
+```{r, warning=FALSE, message=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2) # general plotting functionality
+library(GGally) # includes the ggpairs function, pairs plots via ggplot2
+library(gridExtra) # for grid.arrange, which arranges the plots next to each other
+
+options(na.action = na.exclude, digits = 7)
+
+movies <- read_csv("http://www.evanlray.com/data/bechdel/bechdel.csv") %>%
+  filter(mpaa_rating %in% c("G", "PG", "PG-13", "R"),
+    !is.na(intgross_2013),
+    !is.na(budget_2013))
+```
+
+## Function for Model Fitting and Plotting Diagnostics
+
+We're about to fit a bunch of different models and look at residual diagnostic plots for them all.  Since we want to do slight variations on the same thing a bunch of times, we should make a function!
+
+```{r}
+#' Fit a linear model with specified response and explanatory variables in the movies data set
+#' 
+#' @param response character: response variable name
+#' @param explanatory character: explanatory variable name
+fit_model_and_make_plots <- function(response, explanatory) {
+  fit_formula <- as.formula(paste0(response, " ~ ", explanatory))
+  fit <- lm(fit_formula, data = movies)
+  
+  movies <- movies %>%
+    mutate(
+      residuals = residuals(fit),
+      fitted = predict(fit)
+    )
+  
+  p1 <- ggplot(data = movies, mapping = aes_string(x = explanatory, y = response)) +
+    geom_point() +
+    geom_smooth() +
+    geom_smooth(method = "lm", color = "orange", se = FALSE) +
+    ggtitle("Response vs. Explanatory")
+  
+  p2 <- ggplot(data = movies, mapping = aes_string(x = explanatory, y = "residuals")) +
+    geom_point() +
+    geom_smooth() +
+    ggtitle("Residuals vs. Explanatory")
+  
+  p3 <- ggplot(data = movies, mapping = aes(x = residuals)) +
+    geom_density() +
+    ggtitle("Residuals")
+  
+  p4 <- ggplot(data = movies, mapping = aes(sample = residuals)) +
+    stat_qq() +
+    stat_qq_line() +
+    ggtitle("Residuals Q-Q")
+  
+  p5 <- ggplot(data = movies, mapping = aes_string(x = explanatory)) +
+    geom_density() +
+    ggtitle("Explanatory")
+  
+  p6 <- ggplot(data = movies, mapping = aes_string(x = response)) +
+    geom_density() +
+    ggtitle("Response")
+  
+  grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2)
+}
+```
+
+### Linear Fit
+
+```{r}
+fit_model_and_make_plots(response = "intgross_2013", explanatory = "budget_2013")
+```
+
+
+#### In our example, what are the problems and how are we going to fix them?
+
+\newpage
+
+### Trying $\sqrt{\text{intgross\_2013}}$
+
+```{r, fig.height = 6}
+movies <- movies %>% mutate(
+  sqrt_intgross_2013 = sqrt(intgross_2013)
+)
+
+fit_model_and_make_plots(response = "sqrt_intgross_2013", explanatory = "budget_2013")
+```
+
+#### What do we think?
+
+\newpage
+
+
+## Trying $\log(\text{intgross\_2013})$
+
+```{r}
+movies <- movies %>% mutate(
+  log_intgross_2013 = log(intgross_2013)
+)
+
+fit_model_and_make_plots(response = "log_intgross_2013", explanatory = "budget_2013")
+```
+
+#### What do we think?
+
+\newpage
+
+
+## Trying $\text{intgross\_2013}^{0.25}$
+
+
+```{r}
+movies <- movies %>% mutate(
+  intgross_2013_0.25 = intgross_2013^{0.25}
+)
+
+fit_model_and_make_plots(response = "intgross_2013_0.25", explanatory = "budget_2013")
+```
+
+\newpage
+
+## Transformations of both variables...
+
+```{r}
+movies <- movies %>% mutate(
+  intgross_2013_0.25 = intgross_2013^{0.25},
+  budget_2013_0.25 = budget_2013^{0.25}
+)
+
+fit_model_and_make_plots(response = "intgross_2013_0.25", explanatory = "budget_2013_0.25")
+```
+
+\newpage
+
+# Box-Cox Power Transformations
+
+Box-Cox transformations provide an automated way of choosing transformations to approximate normality.
+
+The transformations come from the following family, indexed by parameter $\lambda$:
+
+\begin{equation*}
+y_i^{(\lambda)} = \begin{cases} \frac{y_i^\lambda - 1}{\lambda} &\text{ if $\lambda \neq 0$} \\ \log(y_i) &\text{if $\lambda = 0$} \end{cases}
+\end{equation*}
+
+Box and Cox developed an automatic procedure to choose $\lambda$ so that the resulting transformed data are as close to normally distributed as possible.  It uses maximum likelihood, but we won't get in to the details here.
+
+Instead, we can use functions from the `car` package to perform Box-Cox transformations:
+
+```{r, message=FALSE}
+library(car)
+
+# Estimate lambda - here, separately for each variable
+bc_params_hat_intgross <- powerTransform(movies$intgross_2013, family = "bcPower")
+bc_params_hat_intgross$lambda
+
+bc_params_hat_budget <- powerTransform(movies$budget_2013, family = "bcPower")
+bc_params_hat_budget$lambda
+
+# Add transformed variables to our data set
+movies <- movies %>% mutate(
+  intgross_2013_bc = bcPower(intgross_2013, lambda = bc_params_hat_intgross$lambda),
+  budget_2013_bc = bcPower(budget_2013, lambda = bc_params_hat_budget$lambda)
+)
+
+fit_model_and_make_plots(response = "intgross_2013_bc", explanatory = "budget_2013_bc")
+```
+
+## Take Care!
+
+```{r}
+fit_bc <- lm(intgross_2013_bc ~ budget_2013_bc, data = movies)
+summary(fit_bc)
+
+predict_transformed_scale <- function(x) {
+  predict(fit_bc, data.frame(budget_2013_bc = x))
+}
+
+ggplot(data = movies, mapping = aes(y = intgross_2013, x = budget_2013)) +
+  geom_point() +
+  stat_function(fun = predict_transformed_scale)
+```
+
+```{r}
+ggplot(data = movies, mapping = aes(y = intgross_2013_bc, x = budget_2013_bc)) +
+  geom_point() +
+  stat_function(fun = predict_transformed_scale)
+```
+
+We have to be careful about the transformations!
+
+```{r, fig.height=4}
+#' Invert a Box-Cox transformation.  See car::bcPower for the original
+#' transformation.
+#'
+#' @param y_transformed a univariate numeric vector with data on the transformed scale
+#' @param lambda exponent for Box-Cox transformation
+#'
+#' @return a de-transformed numeric vector
+invert_bc_transform <- function(y_transformed, lambda) {
+  ## 1) undo box-cox
+  if(abs(lambda) <= 1e-10) {
+    y <- exp(y_transformed)
+  } else {
+    y <- (lambda * y_transformed + 1)^(1 / lambda)
+  }
+
+  return(y)
+}
+
+predict_bc_inverted <- function(x, lambda_x, lambda_y) {
+  x_transformed <- bcPower(x, lambda = lambda_x)
+  y_hat_transformed <- predict(fit_bc, data.frame(budget_2013_bc = x_transformed))
+  y_hat <- invert_bc_transform(y_hat_transformed, lambda = lambda_y)
+}
+
+ggplot(data = movies, mapping = aes(y = intgross_2013, x = budget_2013)) +
+  geom_point() +
+  stat_function(fun = predict_bc_inverted,
+    args = list(lambda_x = bc_params_hat_budget$lambda,
+      lambda_y = bc_params_hat_intgross$lambda))
+```
+

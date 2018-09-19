@@ -146,26 +146,37 @@ Finishing Chapter 3
 
 #### Wed, Sep 19
  * **In class**, we will work on:
-    * Transformations to approximate normality
+    * Q-Q plots: [pdf](materials/20180919_transformations/20180917_QQ.pdf)
+    * Transformations to approximate normality [pdf](materials/20180919_transformations/20180917_Transformations.pdf)
+    * Start on labs 3 and 4.  Go to https://github.com/mhc-stat340-f2018 to find your repository.
  * **After class**, please:
-    * **Read**:
-        * Section 3.5 of ISLR
-    * **Homework**:
-        * **Homework 4 due Friday, Sept 28**
+    * **Homework 4 due Friday, Sept 28** - hope to post on Thursday Sep 20?
 
 #### Fri, Sep 21
  * **In class**, we will work on:
-    * Non-parametric regression with K nearest neighbors; curse of dimensionality
+    * Review Homework 3
+    * Finish labs 3 and 4.  Go to https://github.com/mhc-stat340-f2018 to find your repository.
+ * **After class**, please:
+    * **Read**:
+        * Section 3.5 of ISLR
+    * **Homework 4 due Friday, Sept 28**
 "
   )
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week4", FALSE, "Week 4: Sep 24 -- 28",
+make_week_box("week4", TRUE, "Week 4: Sep 24 -- 28",
 "
-Section 2.2.3 and Sections 4.1 through 4.4: Foundations for Classification, Logistic Regression
+Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations for Classification, Logistic Regression
 
 #### Mon, Sep 24
+ * **In class**, we will work on:
+    * **Quiz** on contents of Homework 3
+    * Non-parametric regression with K nearest neighbors; curse of dimensionality
+ * **After class**, please:
+    * **Read**:
+        * Sections 2.2.3 and 4.1 through 4.3 of ISLR
+    * **Homework 4 due Friday, Sept 28**
 
 #### Wed, Sep 26
 
