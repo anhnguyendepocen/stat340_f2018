@@ -132,7 +132,7 @@ Chapter 3: Multiple Regression
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week3", TRUE, "Week 3: Sep 17 -- 21",
+make_week_box("week3", FALSE, "Week 3: Sep 17 -- 21",
 "
 Finishing Chapter 3
 
@@ -172,15 +172,26 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 #### Mon, Sep 24
  * **In class**, we will work on:
     * **Quiz** on contents of Homework 3
-    * Non-parametric regression with K nearest neighbors; curse of dimensionality
+    * Finish Lab 04 (data transformations)
+    * Start on non-parametric regression with K nearest neighbors [pdf](materials/20180924_KNN/20180924_KNN.pdf)
  * **After class**, please:
     * **Read**:
         * Sections 2.2.3 and 4.1 through 4.3 of ISLR
     * **Homework 4 due Friday, Sept 28**
 
 #### Wed, Sep 26
+ * **In class**, we will work on:
+    * If necessary, finish non-parametric regression with K nearest neighbors
+    * Start thinking about classification for 2 classes via logistic regression
+ * **After class**, please:
+    * **Homework 4 due Friday, Sept 28**
 
 #### Fri, Sep 28
+ * **Homework 4** due today!
+ * **In class**, we will work on:
+    * Classification for 2 classes via (multiple) logistic regression
+ * **After class**, please:
+    * **Read** Sections 4.4 and 4.6
 "
   )
 ```
