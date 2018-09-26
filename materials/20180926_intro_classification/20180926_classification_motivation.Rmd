@@ -1,0 +1,54 @@
+---
+title: "Stat 340: Intro. to Classification and Logistic Regression"
+output: pdf_document
+---
+
+# Motivating Examples
+
+## Data Set 1: Classifying Physical Activity from Acclerometer Data
+
+(Think fitbits)
+
+\includegraphics{timeseries}
+
+In each 10-second window of time, extract a variety of summaries of the accelerometer signal during that window.
+
+\begin{align*}
+Y_i &= j \text{ if subject was engaged in activity type $j$ at time window indexed by $i$} \\
+X_{i1} &= \text{mean acceleration in X axis at time window $i$} \\
+X_{i2} &= \text{mean acceleration in Y axis at time window $i$} \\
+ &\vdots \\
+X_{i77} &= \text{variance of acceleration in Z axis during time window $i$} \\
+\end{align*}
+
+$J = 4$ classes in this example
+
+\includegraphics{pairs}
+
+Goal: specify a statistical model to classify physical activity type (predict Y) from accelerometer data?
+
+\newpage
+
+## Data Set 2: Challenger Space Shuttle O-Rings
+
+On January 28, 1986, the American space shuttle Challenger exploded 73 seconds into flight; all seven crew members on board died.  It was later determined that the cause of the explosion was a failure in a joint in one of the booster rockets that launched the shuttle.  The failure was due to damage to an O-ring that was used to seal the joint.
+
+Can we predict probability of damage to an O-ring given the temperature on the morning of the launch?
+
+\begin{align*}
+Y_i &= \begin{cases} 1 & \text{ if there was evidence of damage to on O-ring on launch number $i$} \\ 0 & \text{ otherwise} \end{cases} \\
+X_i &= \text{ temperature at launch for launch number $i$}
+\end{align*}
+
+```{r, message = FALSE, warning=FALSE, echo = FALSE}
+library(tidyverse)
+challenger <- read_csv("http://www.evanlray.com/data/chihara_hesterberg/Challenger.csv")
+```
+
+```{r, message = FALSE, warning=FALSE, fig.height=1.5, echo = FALSE}
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point()
+```
+
+With $J = 2$ classes, it's common to code them as 0 and 1 instead of 1 and 2.
+

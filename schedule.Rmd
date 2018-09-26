@@ -181,17 +181,22 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 
 #### Wed, Sep 26
  * **In class**, we will work on:
-    * If necessary, finish non-parametric regression with K nearest neighbors
-    * Start thinking about classification for 2 classes via logistic regression
+    * A couple more comments about non-parametric regression with K nearest neighbors
+    * Briefly, motivating examples for classification: [pdf](materials/20180926_intro_classification/20180926_classification_motivation.pdf)
+    * Start thinking about classification for 2 classes via logistic regression: [pdf](materials/20180926_intro_classification/20180926_logistic_intro.pdf)
+    * Lab 05 on Gryd: Logistic regression with one explanatory variable.  
  * **After class**, please:
     * **Homework 4 due Friday, Sept 28**
 
 #### Fri, Sep 28
  * **Homework 4** due today!
  * **In class**, we will work on:
-    * Classification for 2 classes via (multiple) logistic regression
+    * Bayes classifier/Bayes error rate
+    * Overview of estimation for logistic regression (see Stat 343 for more)
+    * Finish Lab 05
  * **After class**, please:
     * **Read** Sections 4.4 and 4.6
+    * **Homework 4 due Friday, Oct 5**
 "
   )
 ```
@@ -199,9 +204,11 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week5", FALSE, "Week 5: Oct 1 -- 5",
 "
-Chapter 4, Sections 4.4 and 4.6: LDA and KNN
+Chapter 4, Sections 4.3, 4.4 and 4.6: Multiple Logistic Regression, Multinomial Logistic Regression, and KNN
 
 #### Mon, Oct 1
+ * **In class**, we will work on:
+    * Classification for 2 classes via (multiple) logistic regression
 
 #### Wed, Oct 3
 

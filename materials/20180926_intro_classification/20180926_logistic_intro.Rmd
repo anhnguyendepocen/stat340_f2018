@@ -1,0 +1,197 @@
+---
+title: "Stat 340: Intro. to Classification and Logistic Regression"
+output: pdf_document
+---
+
+# Example: Challenger Space Shuttle O-Rings
+
+On January 28, 1986, the American space shuttle Challenger exploded 73 seconds into flight; all seven crew members on board died.  It was later determined that the cause of the explosion was a failure in a joint in one of the booster rockets that launched the shuttle.  The failure was due to damage to an O-ring that was used to seal the joint.
+
+Can we predict probability of damage to an O-ring given the temperature on the morning of the launch?
+
+\begin{align*}
+Y_i &= \begin{cases} 1 & \text{ if there was evidence of damage to an O-ring on launch number $i$} \\ 0 & \text{ otherwise} \end{cases} \\
+X_i &= \text{ temperature at launch for launch number $i$}
+\end{align*}
+
+```{r, message = FALSE, warning=FALSE, echo = TRUE}
+library(tidyverse)
+challenger <- read_csv("http://www.evanlray.com/data/chihara_hesterberg/Challenger.csv")
+head(challenger)
+nrow(challenger)
+```
+
+```{r, message = FALSE, warning=FALSE, fig.height=2, echo = TRUE}
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point()
+```
+
+\newpage
+
+## Dealing with Overplotting
+
+Setting jitter...
+
+```{r, message = FALSE, warning=FALSE, fig.height=2, echo = TRUE}
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point(position = position_jitter(width = 0, height = 0.1))
+```
+
+Setting alpha...
+
+```{r, message = FALSE, warning=FALSE, fig.height=2, echo = TRUE}
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point(alpha = 0.4)
+```
+
+\newpage
+
+## Analysis via Simple Linear Regression
+
+Suppose we use the model
+
+$P(Y_i = 1 | X_i) = p(X_i) = \beta_0 + \beta_1 X_i$
+
+```{r, fig.height=2}
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point(position = position_jitter(width = 0, height = 0.1)) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+Is this ok?
+
+\newpage
+
+## Alternative: Logistic Regression
+
+\begin{align*}
+P(Y_i = 1 | X_i) = p(X_i) &= \frac{e^{\beta_0 + \beta_1 X_i}}{1 + e^{\beta_0 + \beta_1 X_i}}
+\end{align*}
+
+This function is called the **logistic function**.
+
+```{r, echo = TRUE, fig.height = 2}
+#' Evaluate the logistic regression function
+#'
+#' @param x a vector of values at which to evaluate the logistic regression function
+#' @param beta_0 value for the intercept parameter of a logistic regression model
+#' @param beta_1 value for the slope parameter of a logistic regression model
+#'
+#' @return vector of predicted probabilities that Y = 1 given x
+logistic <- function(x, beta_0, beta_1) {
+  return(exp(beta_0 + beta_1 * x) / (1 + exp(beta_0 + beta_1 * x)))
+}
+
+ggplot(mapping = aes(x = c(-10, 10))) +
+  stat_function(fun = logistic, args = list(beta_0 = 0, beta_1 = 1), color = "blue") +
+  stat_function(fun = logistic, args = list(beta_0 = 0, beta_1 = -1), color = "red") +
+  stat_function(fun = logistic, args = list(beta_0 = 1, beta_1 = 0), color = "lightgreen") +
+  stat_function(fun = logistic, args = list(beta_0 = -5, beta_1 = 5), color = "purple") +
+  stat_function(fun = logistic, args = list(beta_0 = -5, beta_1 = -2), color = "black") +
+  xlab("x")
+```
+
+**Observations:**
+
+ * For all possible values of $X_i$, $P(Y_i = 1 | X_i) \in (0, 1)$
+ * $\beta_1$ controls direction of curve:
+     * if $\beta_1 > 0$, then $p(x)$ is increasing in $x$
+     * if $\beta_1 < 0$, then $p(x)$ is decreasing in $x$
+     * if $\beta_1 = 0$, then $p(x)$ does not depend on the value of $x$.
+ * $\beta_1$ also controls "slope" of curve:
+     * if $|\beta_1|$ is large, then $p(x)$ changes between 0 and 1 quickly
+     * if $|\beta_1|$ is small, then $p(x)$ changes between 0 and 1 slowly
+     * The maximum slope is $\beta_1 / 4$, and occurs at the value of $x$ where $p(x) = 0.5$
+ * $\beta_0$ shifts the curve left and right, but is otherwise not interpretable.
+
+\newpage
+
+Applied to O-Rings Data:
+
+ * For estimation, similar to `lm` for fitting linear models, but...
+    * Instead of `lm`, use `glm` (stands for generalized linear model)
+    * Specify `family = binomial`
+
+```{r, echo = TRUE, fig.height=2}
+fit <- glm(Incident ~ Temperature, data = challenger, family = binomial)
+summary(fit)
+```
+ * For prediction based on fitted model, similar to use of `predict` with linear model fits, but...
+    * Need to supply `type = "response"` to say that we want a prediction on the scale of the response variable
+
+On the day of the Challenger explosion, the temperature was 33 degrees F.  What does this model fit predict for probability of O-ring failure?
+
+```{r}
+predict(fit, newdata = data.frame(Temperature = 33), type = "response")
+```
+
+Compare to:
+
+```{r}
+exp(15.0429 - 0.2322 * 33) / (1 + exp(15.0429 - 0.2322 * 33))
+```
+
+\newpage
+
+Here's a plot using `stat_function` to plot predicted values (we have to define the function that generates predictions).
+
+```{r, fig.height = 2}
+#' Calculate predictions based on the logistic regression fit called "fit"
+#' (obtained on page 5)
+#'
+#' @param x a vector of values for Temperature at which we want to make predictions
+#'
+#' @return a vector of estimated probabilitities that there will be O-ring damage
+pred_logistic <- function(x) {
+  predict(fit, newdata = data.frame(Temperature = x), type = "response")
+}
+
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point(position = position_jitter(width = 0, height = 0.1)) +
+  stat_function(fun = pred_logistic)
+```
+
+What is our classification boundary, when we think O-ring damage is more likely than not?
+
+Set
+
+\begin{align*}
+P(Y_i = 1 | X_i = x_i) = p(x_i) &= \frac{e^{\beta_0 + \beta_1 x_i}}{1 + e^{\beta_0 + \beta_1 x_i}} = 0.5 \\
+\end{align*}
+
+\vspace{6cm}
+
+```{r}
+-15.0429 / (-0.2322)
+```
+
+\newpage
+
+```{r, fig.height = 2}
+challenger <- challenger %>%
+  mutate(
+    predicted_prob_incident = predict(fit, type = "response"),
+    predicted_incident = as.numeric(predicted_prob_incident > 0.5),
+    prediction_correct = (Incident == predicted_incident)
+  )
+ggplot(data = challenger, mapping = aes(x = Temperature, y = Incident)) +
+  geom_point(mapping = aes(color = prediction_correct),
+    position = position_jitter(width = 0, height = 0.1)) +
+  stat_function(fun = pred_logistic) +
+  geom_vline(xintercept = -15.0429 / -0.2322)
+```
+
+What is our training error rate?
+
+```{r}
+challenger %>%
+  summarize(
+    prediction_error_rate = mean(Incident != predicted_incident)
+  )
+```
+
+Can also be calculated as...
+
+```{r}
+3/23
+```
