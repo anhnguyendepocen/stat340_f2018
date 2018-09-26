@@ -191,6 +191,7 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 #### Fri, Sep 28
  * **Homework 4** due today!
  * **In class**, we will work on:
+    * Review Quiz (make ups will be allowed)
     * Bayes classifier/Bayes error rate
     * Overview of estimation for logistic regression (see Stat 343 for more)
     * Finish Lab 05
