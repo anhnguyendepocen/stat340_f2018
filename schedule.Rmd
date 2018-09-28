@@ -191,7 +191,8 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 #### Fri, Sep 28
  * **Homework 4** due today!
  * **In class**, we will work on:
-    * Review Quiz (make ups will be allowed)
+    * Review Quiz (make ups will be allowed for up to 50% of the credit you missed the first time).
+    * Code for KNN
     * Finish Lab 05
  * **After class**, please:
     * **Homework 5 and Homework 6 due Friday, Oct 5**
