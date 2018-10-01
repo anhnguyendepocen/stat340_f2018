@@ -165,7 +165,7 @@ Finishing Chapter 3
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week4", TRUE, "Week 4: Sep 24 -- 28",
+make_week_box("week4", FALSE, "Week 4: Sep 24 -- 28",
 "
 Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations for Classification, Logistic Regression
 
@@ -201,28 +201,30 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week5", FALSE, "Week 5: Oct 1 -- 5",
+make_week_box("week5", TRUE, "Week 5: Oct 1 -- 5",
 "
-Chapter 4, Sections 4.3, 4.4 and 4.6: Multiple Logistic Regression, Multinomial Logistic Regression, and KNN
+Chapter 4, Sections 4.3, 4.4 and 4.6: Multiple Logistic Regression and KNN
 
 #### Mon, Oct 1
  * **In class**, we will work on:
-    * Bayes classifier/Bayes error rate
-    * Overview of estimation for logistic regression (see Stat 343 for more)
+    * Overview of HW 4
     * Intro to classification for 2 classes via (multiple) logistic regression
+    * Lab 06
  * **After class**, please:
     * **Homework 5 and Homework 6 due Friday, Oct 5**
 
 #### Wed, Oct 3
  * **In class**, we will work on:
-    * More about multiple logistic regression
+    * More about multiple logistic regression: categorical explanatory variables, parameter interpretation
+    * Bayes classifier/Bayes error rate
+    * Overview of estimation for logistic regression (see Stat 343 for more)
  * **After class**, please:
     * **Homework 5 and Homework 6 due Friday, Oct 5**
 
 #### Fri, Oct 5
  * **Homework 5 and Homework 6 due today!**
  * **In class**, we will work on:
-    * More about multiple logistic regression
+    * More about multiple logistic regression or KNN for classification?
  * **After class**, please:
 "
   )
@@ -246,7 +248,7 @@ Sections 5.1 and 6.1: Variable Selection Methods
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
 "
-Sections 5.1, 6.1, 6.3, and 6.4: Variable Selection Methods; Dimension Reduction via PCA; Problems in High Dimensions
+Sections 5.1, 6.1, 6.3, and 6.4: Variable Selection Methods; Problems in High Dimensions
 
 #### Mon, Oct 15
 
