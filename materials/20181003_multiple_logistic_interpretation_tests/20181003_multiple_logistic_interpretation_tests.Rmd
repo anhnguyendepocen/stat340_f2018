@@ -1,0 +1,94 @@
+---
+title: "Coefficient Interpretation and Hypothesis Tests for Multiple Logistic Regression"
+output: pdf_document
+---
+
+## Model
+
+\begin{align*}
+P(Y_i = 1 | X_{i1}, \ldots, X_{ip}) &= \frac{e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}
+\end{align*}
+
+Note that this means that
+
+\begin{align*}
+P(Y_i = 0 | X_{i1}, \ldots, X_{ip}) &= 1 - P(Y_i = 1 | X_{i1}, \ldots, X_{ip}) = 1 - \frac{e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}} \\
+&= \frac{1}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}
+\end{align*}
+
+## Odds
+
+The odds that $Y = 1$ are given by:
+
+\begin{align*}
+Odds(Y_i = 1) &= \frac{P(Y_i = 1 | X_i)}{P(Y_i = 0 | X_i)}
+\end{align*}
+
+Examples:
+
+ * If $P(Y_i = 1 | X_i) = 0.75$, $Odds(Y_i = 1) = \frac{0.75}{0.25} = 3$
+ * If $P(Y_i = 1 | X_i) = 0.5$, $Odds(Y_i = 1) = \frac{0.5}{0.5} = 1$
+ * If $P(Y_i = 1 | X_i) = 0.1$, $Odds(Y_i = 1) = \frac{0.1}{0.9} = \frac{1}{9}$
+
+## Odds in a Logistic Regression Model
+
+\begin{align*}
+Odds(Y_i = 1) &= \frac{P(Y_i = 1 | X_i)}{P(Y_i = 0 | X_i)} = \frac{\frac{e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}}{\frac{1}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}} \\
+&= e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}
+\end{align*}
+
+## Coefficient Interpretation
+
+#### On Odds Scale
+
+Increasing $X_{ij}$ by 1 unit while holding all other explanatory variables fixed leads to a multiplicative change in the predicted odds by $e^\beta_j$.
+
+#### On Log-Odds Scale
+
+Increasing $X_{ij}$ by 1 unit while holding all other explanatory variables fixed leads to an additive change in predicted log-odds of $\beta_j$ units.
+
+## Credit Card Default Example
+
+```{r, message = FALSE}
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(ISLR)
+
+fit <- glm(default ~ student + balance + income, data = Default, family = binomial)
+summary(fit)
+```
+
+#### What is the interpretation of the coefficient for `studentYes`?  Note that $e^{-0.6468} \approx 0.523719$.
+
+\vspace{2cm}
+
+#### What is the interpretation of the coefficient for `balance`?  Note that $e^{0.005737} \approx 1.005753$.  Is it helpful to consider that $e^{(0.005737 * 100)} \approx 1.775$?
+
+\newpage
+
+## Hypothesis Tests
+
+#### Caution: standard approaches to hypothesis testing in logistic regression models are highly dependent on having a fairly large sample size.  See Stat 343 for bootstrap-based alternatives.
+
+### Tests about one coefficient
+
+P-values for tests about one coefficient can be read from the summary output as with `lm`.  Note that these are not $t$ tests, but are large-sample $z$ tests (based on an approximate normal distribution from the Central Limit Theorem).
+
+#### Example: Conduct a test of the claim that an individual's `income` is not useful in predicting whether or not they will default on their credit card debt.
+
+\vspace{2cm}
+
+#### Tests about more than one coefficient
+
+This is a little artificial, but to demonstrate the code let's consider a test of the hypotheses that we can drop both the `student` and the `income` variables from the model.  We will:
+
+ * fit a reduced model (similar to what we would do in a `lm` context)
+ * call `anova` to compare the reduced and full model
+    * Unlike `anova` comparisons with linear models, we need to specify a `test` argument to `anova`.  A common option is `test = "LRT"` (for likelihood ratio test).  Again, this is a large-sample approximate test procedure.
+
+```{r}
+fit_reduced <- glm(default ~ balance, data = Default, family = binomial)
+anova(fit_reduced, fit, test = "LRT")
+```
+

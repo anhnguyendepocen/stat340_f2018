@@ -203,29 +203,32 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week5", TRUE, "Week 5: Oct 1 -- 5",
 "
-Chapter 4, Sections 4.3, 4.4 and 4.6: Multiple Logistic Regression and KNN
+Section 2.2 and Sections 4.1 - 4.3: Intro. to Classification, Multiple Logistic Regression
 
 #### Mon, Oct 1
  * **In class**, we will work on:
     * Overview of HW 4
-    * Intro to classification for 2 classes via (multiple) logistic regression
-    * Lab 06
+    * Intro to classification for 2 classes via (multiple) logistic regression. [pdf](materials/20181001_multiple_logistic_regression/20181001_multiple_logistic.pdf)
+    * Finish Lab 05, start Lab 06
  * **After class**, please:
     * **Homework 5 and Homework 6 due Friday, Oct 5**
 
 #### Wed, Oct 3
  * **In class**, we will work on:
-    * More about multiple logistic regression: categorical explanatory variables, parameter interpretation
-    * Bayes classifier/Bayes error rate
-    * Overview of estimation for logistic regression (see Stat 343 for more)
+    * Finish talking through multiple logistic regression handout from last time: categorical explanatory variables
+    * Parameter interpretation and hypothesis tests in logistic regression models: [pdf](materials/20181003_multiple_logistic_interpretation_tests/20181003_multiple_logistic_interpretation_tests.pdf)
+    * Finish Lab 06, Start Lab 07
  * **After class**, please:
-    * **Homework 5 and Homework 6 due Friday, Oct 5**
+    * **Homework 5 (GitHub) and Homework 6 (Data Camp) due Friday, Oct 5**
 
 #### Fri, Oct 5
- * **Homework 5 and Homework 6 due today!**
+ * **Homework 5 (GitHub) and Homework 6 (Data Camp) due today!**
  * **In class**, we will work on:
-    * More about multiple logistic regression or KNN for classification?
+    * Bayes classifier/Bayes error rate
+    * Overview of estimation for logistic regression (see Stat 343 for more)
+    * Finish Lab 07
  * **After class**, please:
+    * Prepare for a quiz on regression on Wednesday, Oct 10.  See quizzes page on website for topics.
 "
   )
 ```
@@ -239,8 +242,19 @@ Sections 5.1 and 6.1: Variable Selection Methods
  * **No Class**: mid-semester break.  Safe travels!
 
 #### Wed, Oct 10
+ * **In class**, we will work on:
+    * Quiz on multiple regression.  See quizzes page on website for topics.
+    * KNN Classification
+ * **After class**, please:
+    * Take-home midterm distributed; due Monday Oct 15
+    * Homework 07 due Friday Oct 19
 
 #### Fri, Oct 12
+ * **In class**, we will work on:
+    * KNN Regression
+ * **After class**, please:
+    * Take-home midterm distributed; due Monday Oct 15
+    * Homework 07 due Friday Oct 19
 "
   )
 ```
@@ -251,12 +265,14 @@ make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
 Sections 5.1, 6.1, 6.3, and 6.4: Variable Selection Methods; Problems in High Dimensions
 
 #### Mon, Oct 15
+ * **Midterm Due Today!**
 
 
 #### Wed, Oct 17
 
 
 #### Fri, Oct 19
+ * **Homework 07 Due Today!**
 "
   )
 ```
