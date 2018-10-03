@@ -251,9 +251,9 @@ Sections 5.1 and 6.1: Variable Selection Methods
 
 #### Fri, Oct 12
  * **In class**, we will work on:
-    * KNN Regression
+    * KNN Classification
  * **After class**, please:
-    * Take-home midterm distributed; due Monday Oct 15
+    * Take-home midterm due Monday Oct 15
     * Homework 07 due Friday Oct 19
 "
   )
