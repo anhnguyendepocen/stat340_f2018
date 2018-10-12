@@ -258,35 +258,37 @@ Section 2.2
     * Lab 08
  * **After class**, please:
     * Take-home midterm due Monday Oct 15
-    * Homework 07 due Friday Oct 19
+    * Homework 07 due Monday Oct 22
 "
   )
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
+make_week_box("week7", TRUE, "Week 7: Oct 15 -- 19",
 "
 Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 
 #### Mon, Oct 15
  * **Midterm Due Today!**
-
+ * **In class**, we will work on:
+    * Either start on cross-validation or wrap up a few remaining details about classification.
+    * Finish Lab 08
 
 #### Wed, Oct 17
 
 
 #### Fri, Oct 19
- * **Homework 07 Due Today!**
 "
   )
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week8", FALSE, "Week 8: Oct 22 -- 26",
+make_week_box("week8", TRUE, "Week 8: Oct 22 -- 26",
 "
 Section 6.2: Shrinkage Methods.  Start on Sections 7.1 through 7.5: Splines
 
 #### Mon, Oct 22
+ * **Homework 07 Due Today!**
 
 #### Wed, Oct 24
 

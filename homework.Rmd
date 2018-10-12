@@ -24,3 +24,6 @@ title: "Homework"
 |    6         | "Writing Functions in R" course on Data Camp. | 10/5/2018 |  0.5  |
 |              | Graded for completion only.                   |           |       |
 +--------------+-----------------------------------------------+-----------+-------+
+|    7         | Chapters 2 and 4, Classification.             | 10/22/2018|  1    |
+|              | Submit on GitHub.                             |           |       |
++--------------+-----------------------------------------------+-----------+-------+
