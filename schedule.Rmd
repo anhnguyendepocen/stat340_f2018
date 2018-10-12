@@ -201,7 +201,7 @@ Section 3.5, start on Sections 2.2.3 and Sections 4.1 through 4.3: Foundations f
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week5", TRUE, "Week 5: Oct 1 -- 5",
+make_week_box("week5", FALSE, "Week 5: Oct 1 -- 5",
 "
 Section 2.2 and Sections 4.1 - 4.3: Intro. to Classification, Multiple Logistic Regression
 
@@ -234,9 +234,9 @@ Section 2.2 and Sections 4.1 - 4.3: Intro. to Classification, Multiple Logistic 
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week6", FALSE, "Week 6: Oct 8 -- 12",
+make_week_box("week6", TRUE, "Week 6: Oct 8 -- 12",
 "
-Sections 5.1 and 6.1: Variable Selection Methods
+Section 2.2
 
 #### Mon, Oct 8
  * **No Class**: mid-semester break.  Safe travels!
@@ -244,14 +244,17 @@ Sections 5.1 and 6.1: Variable Selection Methods
 #### Wed, Oct 10
  * **In class**, we will work on:
     * Quiz on multiple regression.  See quizzes page on website for topics.
-    * KNN Classification
+    * Overview/review of Lab 07
+    * Start thinking about KNN Classification: [pdf](materials/20181009_KNN_class/20181009_KNN_class.pdf)
  * **After class**, please:
     * Take-home midterm distributed; due Monday Oct 15
-    * Homework 07 due Friday Oct 19
 
 #### Fri, Oct 12
  * **In class**, we will work on:
-    * KNN Classification
+    * Finish thinking about KNN Classification (handout from last class)
+    * Review of `dplyr::mutate` and `dplyr::filter`
+        * RStudio Data Wrangling Cheat Sheet: [pdf](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+    * Lab 08
  * **After class**, please:
     * Take-home midterm due Monday Oct 15
     * Homework 07 due Friday Oct 19
@@ -262,7 +265,7 @@ Sections 5.1 and 6.1: Variable Selection Methods
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
 "
-Sections 5.1, 6.1, 6.3, and 6.4: Variable Selection Methods; Problems in High Dimensions
+Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 
 #### Mon, Oct 15
  * **Midterm Due Today!**
