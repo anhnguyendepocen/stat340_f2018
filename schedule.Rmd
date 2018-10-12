@@ -246,6 +246,7 @@ Section 2.2
     * Quiz on multiple regression.  See quizzes page on website for topics.
     * Overview/review of Lab 07
     * Start thinking about KNN Classification: [pdf](materials/20181009_KNN_class/20181009_KNN_class.pdf)
+    * Notes: [pdf](materials/20181009_KNN_class/20181010_notes.pdf)
  * **After class**, please:
     * Take-home midterm distributed; due Monday Oct 15
 
