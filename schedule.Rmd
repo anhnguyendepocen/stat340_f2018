@@ -271,13 +271,25 @@ Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 #### Mon, Oct 15
  * **Midterm Due Today!**
  * **In class**, we will work on:
-    * Either start on cross-validation or wrap up a few remaining details about classification.
-    * Finish Lab 08
+    * Overview of the `purrr::map` and `purrr::pmap` family of functions: [pdf](materials/20181015_map_pmap/20181015_map_pmap.pdf)
+    * Finish Lab 08: KNN Classification
+    * Lab 09: Practice with `map` and `pmap`
+ * **After class**, please:
+    * Read ISLR Section 5.1
+    * Homework 07 due Monday Oct 22
 
 #### Wed, Oct 17
-
+ * **In class**, we will work on:
+    * Cross-validation for model selection
+ * **After class**, please:
+    * Read ISLR Section 6.1
+    * Homework 07 due Monday Oct 22
 
 #### Fri, Oct 19
+ * **In class**, we will work on:
+    * Cross-validation and other approaches to model selection
+ * **After class**, please:
+    * Homework 07 due Monday Oct 22
 "
   )
 ```
