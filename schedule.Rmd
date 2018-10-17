@@ -234,7 +234,7 @@ Section 2.2 and Sections 4.1 - 4.3: Intro. to Classification, Multiple Logistic 
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week6", TRUE, "Week 6: Oct 8 -- 12",
+make_week_box("week6", FALSE, "Week 6: Oct 8 -- 12",
 "
 Section 2.2
 
@@ -280,7 +280,8 @@ Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 
 #### Wed, Oct 17
  * **In class**, we will work on:
-    * Cross-validation for model selection
+    * Old labs (8 and 9)
+    * Cross-validation for model selection: [pdf](materials/20181017_crossvalidation/20181017_crossvalidation.pdf)
  * **After class**, please:
     * Read ISLR Section 6.1
     * Homework 07 due Monday Oct 22
