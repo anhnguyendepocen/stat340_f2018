@@ -434,8 +434,9 @@ Default_estimation <- Default %>% slice(estimation_test_split_inds[[1]])
 Default_test <- Default %>% slice(-estimation_test_split_inds[[1]])
 
 
+
 # Generate partition of the "estimation" set into 10 folds
-# the result is a list of length 10 with indices of obsevations to include in each fold.
+# the result is a list of length 10 with indices of observations to include in each fold.
 crossval_fold_inds <- caret::createFolds(
   y = Default_estimation$default, # response variable as a vector
   k = 10 # number of folds for cross-validation
@@ -459,39 +460,31 @@ get_xval_error <- function(k, estimation_data, crossval_fold_inds, val_fold) {
   # we first need to rescale the inputs.
   # the rescaling parameters should be estimated based on training data only!
   # but the rescaling is done for both training and validation sets.
-  balance_sd <- sd(train_data$balance)
-  income_sd <- sd(train_data$income)
+  train_explanatory <- train_data %>% dplyr::select(-default)
+  val_explanatory <- val_data %>% dplyr::select(-default)
   
-  val_data <- val_data %>%
-    mutate(
-      balance_rescaled = balance / sd(balance),
-      income_rescaled = income / sd(income)
-    )
+  train_sds <- train_explanatory %>% map_dbl(sd)
+  train_explanatory_std <- scale(train_explanatory, scale = train_sds)
+  val_explanatory_std <- scale(val_explanatory, scale = train_sds)
   
-  train_data <- train_data %>%
-    mutate(
-      balance_rescaled = balance / sd(balance),
-      income_rescaled = income / sd(income)
-    )
-
   # Now we are ready to actually generate the predictions.
-  knn_predictions <- knn(
-    train = train_data %>% dplyr::select(balance_rescaled, income_rescaled), # a data frame with train set explanatory variables
-    test = val_data %>% dplyr::select(balance_rescaled, income_rescaled), # a data frame with test set explanatory variables
+  knn_predictions <- class::knn(
+    train = train_explanatory_std, # a data frame with train set explanatory variables
+    test = val_explanatory_std, # a data frame with test set explanatory variables
     cl = train_data$default, # a vector (not data frame!) with train set response variable; OK to use factor
     k = k, # value of k for k nearest neighbors
     prob = TRUE) # request to return estimated class membership probability
   
-  # calculate training set error rate
+  # calculate validation set error rate
   mean(knn_predictions != val_data$default)
 }
 
 # We need to get the validation set MSE for every combination of
-#  * k for KNN, running from 1 to 10
+#  * k for KNN, running from 1 to 100
 #  * validation fold index, running from 1 to 10
 # Let's use pmap_dbl to get the validation set MSE for each polynomial degree
 error_results <- expand.grid(
-    k = 1:25,
+    k = seq(from = 1, to = 100, by = 1),
     val_fold = 1:10
   )
 
@@ -500,7 +493,7 @@ xval_error_results <- error_results %>%
     val_error = error_results %>%
       pmap_dbl(
         get_xval_error,
-        estimation_data = Default_estimation,
+        estimation_data = Default_estimation %>% select(default, balance, income),
         crossval_fold_inds = crossval_fold_inds
       )
   )
@@ -519,7 +512,45 @@ ggplot(data = summarized_xval_error_results,
     mapping = aes(x = k, y = xval_error)) +
   geom_line() +
   geom_point()
+
+# Which is smallest?
+summarized_xval_error_results %>%
+  filter(xval_error == min(xval_error))
 ```
 
-We could pick $k = 14$ based on cross-validation, and then look at performance on the test data.
+We could pick $k = 30$ based on cross-validation - really, it looks like all values of $k$ from about 10 through 50 are doing about as well as each other.
+
+How does the performance using the selected k compare to a naive strategy of just predicting "No" for everyone?
+
+```{r}
+mean(Default$default != "No")
+```
+
+### Test set performance of selected model (k = 30)
+
+```{r}
+train_explanatory <- Default_estimation %>% dplyr::select(balance, income)
+test_explanatory <- Default_test %>% dplyr::select(balance, income)
+
+train_sds <- train_explanatory %>% map_dbl(sd)
+train_explanatory_std <- scale(train_explanatory, scale = train_sds)
+test_explanatory_std <- scale(test_explanatory, scale = train_sds)
+
+# Now we are ready to actually generate the predictions.
+knn_predictions <- class::knn(
+  train = train_explanatory_std, # a data frame with train set explanatory variables
+  test = test_explanatory_std, # a data frame with test set explanatory variables
+  cl = Default_estimation$default, # a vector (not data frame!) with train set response variable; OK to use factor
+  k = 10, # value of k for k nearest neighbors
+  prob = TRUE) # request to return estimated class membership probability
+
+# calculate test set error rate
+mean(knn_predictions != Default_test$default)
+```
+
+How does this compare to the naive strategy of always predicting no default in the test set?
+
+```{r}
+mean(Default_test$default != "No")
+```
 
