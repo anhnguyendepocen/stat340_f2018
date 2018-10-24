@@ -302,8 +302,13 @@ Section 6.2: Shrinkage Methods.  Start on Sections 7.1 through 7.5: Splines
 
 #### Mon, Oct 22
  * **Homework 07 Due Today!**
+ * **In class**, we will work on:
+    * Lab about cross-validation
 
 #### Wed, Oct 24
+ * **In class**, we will work on:
+    * Section 6.1: AIC, BIC, Cp, $R^2_{adj}$, and stepwise variable selection procedures. [pdf](materials/20181024_variable_selection/20181024_variable_selection.pdf)
+    * Section 6.2: Shrinkage/Regularization.  [pdf](materials/20181024_variable_selection/20181024_shrinkage.pdf)
 
 #### Fri, Oct 26
 "
