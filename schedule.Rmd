@@ -264,7 +264,7 @@ Section 2.2
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week7", TRUE, "Week 7: Oct 15 -- 19",
+make_week_box("week7", FALSE, "Week 7: Oct 15 -- 19",
 "
 Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 
@@ -298,7 +298,7 @@ Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week8", TRUE, "Week 8: Oct 22 -- 26",
 "
-Section 6.2: Shrinkage Methods.  Start on Sections 7.1 through 7.5: Splines
+Sections 6.1 and 6.2: Variable Selection and Shrinkage Methods.
 
 #### Mon, Oct 22
  * **Homework 07 Due Today!**
@@ -311,16 +311,22 @@ Section 6.2: Shrinkage Methods.  Start on Sections 7.1 through 7.5: Splines
     * Section 6.2: Shrinkage/Regularization.  [pdf](materials/20181024_variable_selection/20181024_shrinkage.pdf)
 
 #### Fri, Oct 26
+ * **In class**, we will work on:
+    * Finish discussion of shrinkage/regularization.
+    * Lab 11: LASSO and Ridge regression
 "
   )
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week9", FALSE, "Week 9: Oct 29 -- Nov 2",
+make_week_box("week9", TRUE, "Week 9: Oct 29 -- Nov 2",
 "
-Finish Sections 7.1 though 7.5: Splines
+Start on Chapter 8: Pricipal Components Regression? Start on Tree-Based Methods
 
 #### Mon, Oct 29
+ * **In class**, we will work on:
+    * **Quiz** on material from Chapter 4 (classification).  See quizzes page for topics.
+    * Finish Lab 11 or Introduce Principal Components Regression or Introduce Classification and Regression Trees?
 
 #### Wed, Oct 31
 
@@ -332,7 +338,7 @@ Finish Sections 7.1 though 7.5: Splines
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week10", FALSE, "Week 10: Nov 5 -- 9",
 "
-Section 7.6 (to be augmented with another text): GAMs
+Chapter 8: Tree-Based Methods
 
 #### Mon, Nov 5
 
@@ -346,7 +352,9 @@ Section 7.6 (to be augmented with another text): GAMs
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week11", FALSE, "Week 11: Nov 12 -- 16",
 "
-More on GAMs, start on Chapter 8: Tree-based methods
+Start on Chapter 7: Splines
+
+**Midterm 2 this week** - take home.
 
 #### Mon, Nov 12
 
@@ -360,7 +368,7 @@ More on GAMs, start on Chapter 8: Tree-based methods
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week12", FALSE, "Week 12: Nov 19 -- 23 (Thanksgiving)",
 "
-Finish Section 8.1; Thanksgiving Break
+More on Splines; Thanksgiving Break
 
 #### Mon, Nov 19
 
@@ -376,7 +384,7 @@ Finish Section 8.1; Thanksgiving Break
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week13", FALSE, "Week 13: Nov 26 -- 30",
 "
-Section 8.2
+Chapter 7: Splines and GAMs
 
 #### Mon, Nov 26
 
@@ -412,7 +420,7 @@ make_week_box("week15", FALSE, "Week 15: Dec 10",
 
 ```{r, echo = FALSE, results='asis'}
 make_week_box("finals", TRUE, "Final Exams: Fri, Dec 14 at 7pm -- Tue, Dec 18 at noon",
-"We will have a cumulative final exam.
+"We will NOT have a cumulative final exam.
 "
   )
 ```
