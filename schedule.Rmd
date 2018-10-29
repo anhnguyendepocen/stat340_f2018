@@ -329,6 +329,9 @@ Start on Chapter 8: Tree-Based Methods
     * Discuss final project
     * Finish Lab 11?
     * Introduce Classification and Regression Trees? [pdf](materials/20181029_trees/20181029_trees.pdf)
+ * **After class**, please work on:
+    * Lab 09: due as 1/2-value homework assignment on Friday Nov 2
+    * PS 08: due Friday Nov 2
 
 #### Wed, Oct 31
 
