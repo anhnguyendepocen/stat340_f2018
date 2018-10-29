@@ -326,7 +326,9 @@ Start on Chapter 8: Tree-Based Methods
 #### Mon, Oct 29
  * **In class**, we will work on:
     * **Quiz** on material from Chapter 4 (classification).  See quizzes page for topics.
-    * Finish Lab 11 or Introduce Classification and Regression Trees?
+    * Discuss final project
+    * Finish Lab 11?
+    * Introduce Classification and Regression Trees? [pdf](materials/20181029_trees/20181029_trees.pdf)
 
 #### Wed, Oct 31
 
