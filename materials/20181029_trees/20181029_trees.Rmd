@@ -1,0 +1,216 @@
+---
+title: "Classification and Regression Trees (CART)"
+output:
+  pdf_document:
+    keep_tex: true
+geometry: margin=1.5cm
+header-includes:
+   - \usepackage{booktabs}
+   - \usepackage{multicol}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+library(purrr)
+```
+
+## Regression Trees: Ozone data
+
+This example is adapted from the book "Extending the Linear Model with R", by Julian J. Faraway.  Here is a quote from that book describing the data:
+
+> We apply the regression tree methodology to study the relationship between atmospheric ozone concentration and meteorology in the Los Angeles Basin in 1976.  A number of cases with missing variables hve been removed for simplicity [but Evan notes that trees are among the regression and classification methods that are best able to handle missing data].  We wish to predict the ozone level from the other predictors.
+
+The variables in the data set are as follows:
+
+ * `O3`: Ozone concentration (ppm) at Sandbug Air Force Base
+ * `vh`: Vandenburg 500 millibar height (inches)
+ * `wind`: wind speed (miles per hour)
+ * `humidity`: humidity (percent)
+ * `temp`: temperature (degrees C)
+ * `ibh`: inversion base height (feet)
+ * `dpg`: Daggett pressure gradient (mmhg)
+ * `ibt`: inversion base temperature (degrees F)
+ * `vis`: visibility (miles)
+ * `doy`: day of the year
+
+```{r}
+library(faraway)
+head(ozone)
+dim(ozone)
+ggpairs(ozone %>% select(vh:doy, O3))
+```
+
+```{r}
+ggplot(data = ozone, mapping = aes(x = temp, y = ibh, color = O3)) +
+  geom_point() +
+  scale_color_gradient2(midpoint = median(ozone$O3)) +
+  xlim(c(0, 100))
+```
+
+Regression tree with 2 variables:
+
+```{r}
+# Load rpart package (stands for "Recursive Partitioning")
+library(rpart)
+
+# fit regression tree model
+roz <- rpart(O3 ~ temp + ibh, data = ozone)
+print(roz)
+
+# print first picture of resulting tree
+plot(roz, margin = 0.1)
+text(roz)
+
+# print second picture of resulting tree
+plot(roz, margin = 0.1, uniform = TRUE)
+text(roz)
+```
+
+Space for two pictures:
+
+\vspace{9cm}
+
+What's the predicted ozone level for a day with a temperature of 75 degrees and an inversion base height of 2000 feet?
+
+```{r}
+test_data <- data.frame(
+  temp = 75, ibh = 2000
+)
+
+predict(roz, newdata = test_data)
+```
+
+## Notation/Mathematical Description:
+
+$\widehat{f}(x_i) = \sum_{m = 1}^{\vert T \vert} I_{R_m}(x_i) \hat{y}_{m}$
+
+ * $\vert T \vert$ is the number of *terminal nodes* in the tree.
+ * $R_m$ is the set of values for explanatory variables that fall into the $m$th terminal node.  ($R$ for region or rectangle)
+ * $I_{R_m}(x_i) = \begin{cases} 1 \text{ if $x_i$ is in region $R_m$} \\ 0 \text{ otherwise} \end{cases}$
+ * $\hat{y}_m$ is the predicted value in terminal node number $m$.
+
+\newpage
+
+More covariates:
+
+```{r}
+roz_2 <- rpart(O3 ~ ., data = ozone)
+
+# print picture of resulting tree
+plot(roz_2, margin = 0.1, uniform = TRUE)
+text(roz_2)
+```
+
+\newpage
+
+## Classification Trees: Heart Disease data
+
+We have data on 303 patients who presented with chest pain.  The response variable is `AHD`, which is is "Yes" if an angiogrphic test indicates presence of heart disease, and "No" otherwise.  There are 13 predictor variables which are a mix of quantitative and categorical variables.
+
+```{r, message = FALSE}
+library(readr)
+heart <- read_csv("http://www.evanlray.com/data/islr/Heart.csv") %>%
+  select(-X1) %>% # drop leading column of row numbers
+  mutate_at(c("Sex", "ChestPain", "Fbs", "RestECG", "ExAng", "Slope", "Thal", "AHD"), factor)
+
+head(heart)
+```
+
+```{r}
+# too many variables for a pairs plot to be effective
+# instead, plot each explanatory variable by response
+make_plot <- function(explanatory_var) {
+  if(is.numeric(heart[[explanatory_var]])) {
+    p <- ggplot(data = heart, mapping = aes_string(x = explanatory_var, color = "AHD")) + geom_density()
+  } else {
+    p <- ggplot(data = heart, mapping = aes_string(x = explanatory_var, fill = "AHD")) + geom_bar()
+  }
+  
+  return(p)
+}
+
+ncol(heart)
+plots <- map(colnames(heart)[1:13], make_plot)
+
+p_combined <- marrangeGrob(grobs = plots, ncol = 3, nrow = 5)
+print(p_combined)
+```
+
+```{r}
+rhd <- rpart(AHD ~ ., data = heart)
+
+# print second picture of resulting tree
+plot(rhd, margin = 0.1, uniform = TRUE)
+text(rhd)
+
+levels(heart$Thal)
+levels(heart$ChestPain)
+```
+
+What's the predicted class for someone whose Thallium stress test results are normal, whose chest pain symptoms are typical, and has a "Ca" (not sure what that stands for) of 2?
+
+\newpage
+
+## Overview of Estimation
+
+### Reminder of Notation
+
+Recall our mathematical formulation:
+
+$\widehat{f}(x_i) = \sum_{m = 1}^{\vert T \vert} I_{R_m}(x_i) \hat{y}_{m}$
+
+ * $\vert T \vert$ is the number of *terminal nodes* in the tree.
+ * $R_m$ is the set of values for explanatory variables that fall into the $m$th terminal node.  ($R$ for region or rectangle)
+ * $I_{R_m}(x_i) = \begin{cases} 1 \text{ if $x_i$ is in region $R_m$} \\ 0 \text{ otherwise} \end{cases}$
+ * $\hat{y}_m$ is the predicted value in terminal node number $m$.
+
+### Parameters to Estimate
+
+ * **Split Points**: for each branch of the tree, what covariate is used and at which value does the split occur?  This determines the $R_m$.
+ * **Regression Constants**: In each terminal node, what is the predicted value $\hat{y}_m$?
+
+### Optimization target for regression
+
+\begin{align*}
+RSS &= \sum_{i = 1}^n (\widehat{y}_i - y_i)^2 = \sum_{m = 1}^{\vert T \vert} \sum_{i: x_i \in R_m} (y_i - \hat{y}_m)^2
+\end{align*}
+
+### Optimization target for classification
+
+We could use classification error rate, but in practice other options are used more frequently.
+
+For node $m$, let $p_{jm}$ be the proportion of the observations in node $m$ that have class $j$.
+
+One common choice is the **Gini index**: $1 - \sum_{J} p_{jm}^2$
+
+### Top-down Estimation Algorithm (discussed for regression; classification similar)
+
+1. Start with a tree with only one region/terminal node (the same prediction is made for all observations).
+    * Predicted value is mean of all observations
+    * Calculate the RSS based on that prediction
+2. Repeat the following until a stopping criterion is met:
+    a. For every terminal node in the current tree, consider all possible split points for each covariate $X_1$, \ldots, $X_p$.
+        * For each possible split, predicted values will be the mean of all observations in the newly created leaves
+        * Calculate RSS based on that split
+    b. Select the split that achieved the lowest RSS
+
+Commonly used stopping criteria:
+
+ * All regions contain 5 or fewer observations (for example)
+ * A maximum number of terminal nodes has been reached
+ * No improvement in RSS larger than $\varepsilon$ can be realized
+
+### Regularizing number of terminal nodes
+
+A smaller number of terminal nodes is less likely to overfit.  Choose tree to minimize:
+
+$RSS + \lambda \vert T \vert$
+
+Use cross-validation to select $\lambda$.
