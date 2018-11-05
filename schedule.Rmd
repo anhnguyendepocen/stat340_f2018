@@ -296,14 +296,14 @@ Sections 5.1 and 6.1: Cross-validation and Variable Selection Methods
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week8", TRUE, "Week 8: Oct 22 -- 26",
+make_week_box("week8", FALSE, "Week 8: Oct 22 -- 26",
 "
 Sections 6.1 and 6.2: Variable Selection and Shrinkage Methods.
 
 #### Mon, Oct 22
  * **Homework 07 Due Today!**
  * **In class**, we will work on:
-    * Lab about cross-validation
+    * Lab 10, about cross-validation
 
 #### Wed, Oct 24
  * **In class**, we will work on:
@@ -319,37 +319,58 @@ Sections 6.1 and 6.2: Variable Selection and Shrinkage Methods.
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week9", TRUE, "Week 9: Oct 29 -- Nov 2",
+make_week_box("week9", FALSE, "Week 9: Oct 29 -- Nov 2",
 "
-Start on Chapter 8: Tree-Based Methods
+Start on Chapter 8: Tree-Based Methods and Ensembles
 
 #### Mon, Oct 29
  * **In class**, we will work on:
     * **Quiz** on material from Chapter 4 (classification).  See quizzes page for topics.
     * Discuss final project
-    * Finish Lab 11?
-    * Introduce Classification and Regression Trees? [pdf](materials/20181029_trees/20181029_trees.pdf)
- * **After class**, please work on:
+    * Finish Lab 11
+* **After class**, please work on:
     * Lab 09: due as 1/2-value homework assignment on Friday Nov 2
     * PS 08: due Friday Nov 2
 
 #### Wed, Oct 31
+ * **In class**, we will work on:
+    * Introduce Classification and Regression Trees: [pdf](materials/20181029_trees/20181029_trees.pdf)
+ * **After class**, please work on:
+    * Lab 09: due as 1/2-value homework assignment on Monday Nov 5
+    * PS 08: due Monday Nov 5
 
 #### Fri, Nov 2
+ * **In class**, we will work on:
+    * Introduction to Ensembles [pdf](20181102_intro_ensembles/20181102_stacking_ionosphere.pdf)
+ * **After class**, please work on:
+    * Lab 09: due as 1/2-value homework assignment on Monday Nov 5
+    * PS 08: due Monday Nov 5
 "
   )
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week10", FALSE, "Week 10: Nov 5 -- 9",
+make_week_box("week10", TRUE, "Week 10: Nov 5 -- 9",
 "
 Chapter 8: Tree-Based Methods
 
 #### Mon, Nov 5
+ * **In class**, we will work on:
+    * Merge conflicts in git: [pdf](materials/20181105_stacking_regression/Stat340-github-conflicts.pdf)
+    * Ensembles and stacking for regression: [pdf](materials/20181105_stacking_regression/20181105_stacking_regression.pdf)
+ * **After class**, please work on:
+    * Lab 09: due today
+    * PS 08: due today
 
 #### Wed, Nov 7
+ * **In class**, we will work on:
+    * Random forests
+    * Start lab about stacking and random forests
 
 #### Fri, Nov 9
+ * **First steps on project due today: see projects page**
+ * **In class**, we will work on:
+    * Finish lab about stacking and random forests
 "
   )
 ```
@@ -357,7 +378,7 @@ Chapter 8: Tree-Based Methods
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week11", FALSE, "Week 11: Nov 12 -- 16",
 "
-Start on Chapter 7: Splines
+Gradient Tree Boosting
 
 **Midterm 2 this week** - take home.
 
@@ -373,7 +394,7 @@ Start on Chapter 7: Splines
 ```{r, echo = FALSE, results='asis'}
 make_week_box("week12", FALSE, "Week 12: Nov 19 -- 23 (Thanksgiving)",
 "
-More on Splines; Thanksgiving Break
+More on Gradient Tree Boosting; Thanksgiving Break
 
 #### Mon, Nov 19
 

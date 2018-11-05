@@ -1,0 +1,356 @@
+---
+title: "Stacking for Regression"
+output:
+  pdf_document:
+    keep_tex: true
+geometry: margin=1.5cm
+header-includes:
+   - \usepackage{booktabs}
+   - \usepackage{multicol}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+## Ensembles for Classification
+
+Last class, we introduced stacking in a classification context.
+
+ * We have multiple "stage 1" or "component" classifiers
+ * We combine predictions from these stage 1 classifiers
+    * Majority vote
+    * Average predicted class probabilities
+    * Stacking: feed predicted class probabilities from stage 1 models into a new stage 2 model.  Lets us weight models according to (cross-validated) performance on training set.
+ * If component classifiers generate predictions that are not highly correlated, ensembles can often improve overall classification error rates.
+    * Example where 3 independent classifiers have error rate 0.3, majority vote has error rate 0.216
+    * Benefit from building ensemble disappears if component model predictions are identical/highly correlated
+
+## Ensembles for Regression
+
+$\hat{Y}_i$ is a number.
+
+Consider an ensemble that takes the average of predictions $\widehat{Y}^{(1)}_i$, $\widehat{Y}^{(2)}_i$, $\widehat{Y}^{(3)}_i$ from 3 stage 1 models:
+
+$\widehat{Y}^{(ensemble)}_i = \frac{1}{3} \widehat{Y}^{(1)}_i + \frac{1}{3} \widehat{Y}^{(2)}_i + \frac{1}{3} \widehat{Y}^{(3)}_i$
+
+#### Toy Scenario: Component models are independent, bias 0, same variance
+
+Suppose each of our component regression models generates predictions with the following characteristics (stated in terms of the first model):
+
+ * On average, $\widehat{Y}^{(1)}_i = Y_i$  (so predictions have bias 0).
+
+$$E\left[\widehat{Y}^{(1)}_i\right] = Y_i$$
+
+ * Variance of predictions is $\sigma^2$ (same variance for all models).
+
+$$Var\left[\widehat{Y}^{(1)}_i\right] = \sigma^2$$
+
+ * So each component model has expected test set MSE = $\sigma^2 + \text{Var}(\varepsilon)$
+ 
+\begin{align*}
+\text{MSE} &= \text{Bias}(\widehat{Y}^{(1)}_i)^2 + \text{Var}(\widehat{Y}^{(1)}_i) + \text{Var}(\varepsilon) \\
+&= 0^2 + \sigma^2 + \text{Var}(\varepsilon)
+\end{align*}
+
+\newpage
+
+Then...
+
+* On average, $\widehat{Y}^{(ensemble)}_i = Y_i$  (ensemble predictions also have bias 0).
+
+\begin{align*}
+E\left[\widehat{Y}^{(ensemble)}_i\right] &= E\left[\frac{1}{3} \widehat{Y}^{(1)}_i + \frac{1}{3} \widehat{Y}^{(2)}_i + \frac{1}{3} \widehat{Y}^{(3)}_i\right] \\
+&= \frac{1}{3} E\left[\widehat{Y}^{(1)}_i\right] + \frac{1}{3} E\left[\widehat{Y}^{(2)}_i\right] + \frac{1}{3} E\left[\widehat{Y}^{(3)}_i\right] \\
+&= \frac{1}{3} Y_i + \frac{1}{3} Y_i + \frac{1}{3} Y_i \\
+&= Y_i
+\end{align*}
+
+ * Ensemble predictions have variance $\frac{1}{3} \sigma^2$
+
+\begin{align*}
+\text{Var}(\widehat{Y}^{(ensemble)}_i) &= \text{Var}\left(\frac{1}{3} \widehat{Y}^{(1)}_i + \frac{1}{3} \widehat{Y}^{(2)}_i + \frac{1}{3} \widehat{Y}^{(3)}_i\right) \\
+&= \frac{1}{9} \text{Var}(\widehat{Y}^{(1)}_i) + \frac{1}{9} \text{Var}(\widehat{Y}^{(2)}_i) + \frac{1}{9} \text{Var}(\widehat{Y}^{(3)}_i) \\
+&= \frac{1}{9} \sigma^2 + \frac{1}{9} \sigma^2 + \frac{1}{9} \sigma^2 \\
+&= \frac{1}{3} \sigma^2
+\end{align*}
+
+ * So the ensemble model has expected test set MSE = $\frac{1}{3}\sigma^2 + \text{Var}(\varepsilon)$
+
+\begin{align*}
+\text{MSE} &= \text{Bias}(\widehat{Y}^{(ensemble)}_i)^2 + \text{Var}(\widehat{Y}^{(ensemble)}_i) + \text{Var}(\varepsilon) \\
+&= 0^2 + \frac{1}{3}\sigma^2 + \text{Var}(\varepsilon)
+\end{align*}
+
+#### Comments:
+
+ * Combining predictions from independent (or not-too-highly-correlated) methods reduces variance, and so overall expected test set MSE
+ * If the methods are highly correlated, less beneficial to combine them
+    * Extreme case: correlation 1, ensemble predictions are same as component model predictions
+ * Combining predictions could also help bias if the methods are biased in different directions (some predict too high, some too low)
+    * in general this effect will be small
+ * There's nothing we can do about $\text{Var}(\varepsilon)$ in a regression problem, just like we can never improve beyond the Bayes error rate in a classification problem.
+
+\newpage
+
+# Example of Ensembles for Regression: Boston Housing Prices
+
+Predicting the median value of owner-occupied homes in neighborhoods around Boston, based on recorded characteristics of those neighborhoods.
+
+```{r, message = FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(purrr)
+library(glmnet)
+library(caret)
+
+# read in data
+Boston <- read_csv("http://www.evanlray.com/data/mass/Boston.csv")
+
+# Initial train/test split ("estimation"/test) and cross-validation folds
+set.seed(63770)
+tt_inds <- caret::createDataPartition(Boston$medv, p = 0.8)
+train_set <- Boston %>% slice(tt_inds[[1]])
+test_set <- Boston %>% slice(-tt_inds[[1]])
+
+crossval_val_fold_inds <- caret::createFolds(
+  y = train_set$medv, # response variable as a vector
+  k = 10 # number of folds for cross-validation
+)
+
+get_complementary_inds <- function(x) {
+  return(seq_len(nrow(train_set))[-x])
+}
+crossval_train_fold_inds <- map(crossval_val_fold_inds, get_complementary_inds)
+
+
+# Function to calculate error rate
+calc_rmse <- function(observed, predicted) {
+  sqrt(mean((observed - predicted)^2))
+}
+```
+
+## Individual Methods
+
+#### Linear Regression
+
+```{r, warning=FALSE}
+lm_fit <- train(
+  form = medv ~ .,
+  data = train_set,
+  method = "lm", # method for fit
+  trControl = trainControl(method = "cv", # evaluate method performance via cross-validation
+    number = 10, # number of folds for cross-validation
+    index = crossval_train_fold_inds, # I'm specifying which folds to use, for consistency across methods
+    indexOut = crossval_val_fold_inds, # I'm specifying which folds to use, for consistency across methods
+    returnResamp = "all", # return information from cross-validation
+    savePredictions = TRUE) # return validation set predictions from cross-validation
+)
+
+lm_fit$results
+```
+
+#### KNN
+
+```{r}
+knn_fit <- train(
+  form = medv ~ .,
+  data = train_set,
+  method = "knn",
+  preProcess = "scale",
+  trControl = trainControl(method = "cv",
+    number = 10,
+    index = crossval_train_fold_inds, # I'm specifying which folds to use, for consistency across methods
+    indexOut = crossval_val_fold_inds, # I'm specifying which folds to use, for consistency across methods
+    returnResamp = "all",
+    savePredictions = TRUE),
+  tuneGrid = data.frame(k = 1:20)
+)
+
+knn_fit$results
+```
+
+#### Trees
+
+```{r}
+rpart_fit <- train(
+  form = medv ~ .,
+  data = train_set,
+  method = "rpart",
+  trControl = trainControl(method = "cv",
+    number = 10,
+    index = crossval_train_fold_inds, # I'm specifying which folds to use, for consistency across methods
+    indexOut = crossval_val_fold_inds, # I'm specifying which folds to use, for consistency across methods
+    returnResamp = "all",
+    savePredictions = TRUE),
+  tuneLength = 10
+)
+
+rpart_fit$results
+```
+
+#### Test set predictions from each of the 3 methods above:
+
+```{r}
+lm_preds <- predict(lm_fit, newdata = test_set)
+calc_rmse(test_set$medv, lm_preds)
+
+knn_preds <- predict(knn_fit, newdata = test_set)
+calc_rmse(test_set$medv, knn_preds)
+
+rpart_preds <- predict(rpart_fit, newdata = test_set)
+calc_rmse(test_set$medv, rpart_preds)
+```
+
+## Ensemble Methods
+
+### Mean of Predictions from Stage 1 Methods
+
+```{r}
+lm_preds <- predict(lm_fit, newdata = test_set)
+knn_preds <- predict(knn_fit, newdata = test_set)
+rpart_preds <- predict(rpart_fit, newdata = test_set)
+
+mean_pred <- (lm_preds + knn_preds + rpart_preds) / 3
+
+calc_rmse(test_set$medv, mean_pred)
+```
+
+### Stacking: Fit a model to combine predicted class membership probabilities
+
+ * Some methods might be better than others; we should give them more weight.
+ * We can use training set performance to determine how much to weight them.
+ * We must cross-validate: otherwise, we'd give too much weight to models that overfit the training data
+
+**Process:**
+
+Estimation: 
+
+1. Get cross-validated predictions for each "stage 1" or "component" model
+2. Create a new data set where the explanatory variables are the cross-validated predictions from the component models
+3. Fit a "stage 2" model to predict the response based on the component model predictions
+
+Prediction for test set:
+
+4. For each component model, re-fit to the full training data set and make predictions for the test set
+5. Create a new data set where the explanatory variables are the test set predictions from the component models
+6. Predict using the stage 2 model fit from step 3 and the data frame created in step 5.
+
+```{r, echo = FALSE}
+knitr::include_graphics("stacking.pdf")
+```
+
+### Stacking via Linear Model, no intercept
+
+```{r, warning=FALSE}
+# Step 1: Validation-fold predictions from component models
+lm_val_pred <- lm_fit$pred %>%
+  arrange(rowIndex) %>%
+  pull(pred)
+
+knn_val_pred <- knn_fit$pred %>%
+  filter(k == knn_fit$bestTune$k) %>%
+  arrange(rowIndex) %>%
+  pull(pred)
+
+rpart_val_pred <- rpart_fit$pred %>%
+  filter(cp == rpart_fit$bestTune$cp) %>%
+  arrange(rowIndex) %>%
+  pull(pred)
+
+# Step 2: data set with validation-set component model predictions as explanatory variables
+train_set <- train_set %>%
+  mutate(
+    lm_pred = lm_val_pred,
+    knn_pred = knn_val_pred,
+    rpart_pred = rpart_val_pred
+  )
+
+# Step 3: fit model using component model predictions as explanatory variables
+# Here, a linear model without intercept (via lm directly because caret::train
+# doesn't let you fit a model without intercept without more work).
+stacking_fit <- lm(medv ~ 0 + lm_pred + knn_pred + rpart_pred, data = train_set)
+coef(stacking_fit)
+
+# Step 4 (both cross-validation and refitting to the full training set were already done
+# as part of obtaining lm_fit, knn_fit, and rpart_fit above)
+lm_test_pred <- predict(lm_fit, newdata = test_set)
+knn_test_pred <- predict(knn_fit, newdata = test_set)
+rpart_test_pred <- predict(rpart_fit, newdata = test_set)
+
+# Step 5: Assemble data frame of test set predictions from each component model
+stacking_test_x <- data.frame(
+  lm_pred = lm_test_pred,
+  knn_pred = knn_test_pred,
+  rpart_pred = rpart_test_pred
+)
+
+# Step 6: Stacked model predictions
+stacking_preds <- predict(stacking_fit, stacking_test_x)
+
+# Calculate error rate
+calc_rmse(test_set$medv, stacking_preds)
+```
+
+\newpage
+
+### Stacking via Ridge Regression
+
+ * We could also use other methods for the second stage model.
+
+```{r, warning=FALSE}
+# Step 1: Validation-fold predictions from component models
+lm_val_pred <- lm_fit$pred %>%
+  arrange(rowIndex) %>%
+  pull(pred)
+
+knn_val_pred <- knn_fit$pred %>%
+  filter(k == knn_fit$bestTune$k) %>%
+  arrange(rowIndex) %>%
+  pull(pred)
+
+rpart_val_pred <- rpart_fit$pred %>%
+  filter(cp == rpart_fit$bestTune$cp) %>%
+  arrange(rowIndex) %>%
+  pull(pred)
+
+# Step 2: data set with validation-set component model predictions as explanatory variables
+train_set <- train_set %>%
+  mutate(
+    lm_pred = lm_val_pred,
+    knn_pred = knn_val_pred,
+    rpart_pred = rpart_val_pred
+  )
+
+# Step 3: fit model using component model predictions as explanatory variables
+stacking_fit <- train(
+  form = medv ~ lm_pred + knn_pred + rpart_pred,
+  data = train_set,
+  method = "glmnet", 
+  tuneLength = 10)
+coef(stacking_fit$finalModel, stacking_fit$bestTune$lambda) %>% t()
+
+# Step 4 (both cross-validation and refitting to the full training set were already done
+# as part of obtaining lm_fit, knn_fit, and rpart_fit above)
+lm_test_pred <- predict(lm_fit, newdata = test_set)
+knn_test_pred <- predict(knn_fit, newdata = test_set)
+rpart_test_pred <- predict(rpart_fit, newdata = test_set)
+
+# Step 5: Assemble data frame of test set predictions from each component model
+stacking_test_x <- data.frame(
+  lm_pred = lm_test_pred,
+  knn_pred = knn_test_pred,
+  rpart_pred = rpart_test_pred
+)
+
+# Step 6: Stacked model predictions
+stacking_preds <- predict(stacking_fit, stacking_test_x)
+
+# Calculate error rate
+calc_rmse(test_set$medv, stacking_preds)
+```
+

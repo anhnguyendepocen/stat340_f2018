@@ -56,26 +56,26 @@ ggplot(data = ozone, mapping = aes(x = temp, y = ibh, color = O3)) +
 
 Regression tree with 2 variables:
 
-```{r}
+```{r, fig.height = 3.5}
 # Load rpart package (stands for "Recursive Partitioning")
 library(rpart)
 
 # fit regression tree model
 roz <- rpart(O3 ~ temp + ibh, data = ozone)
 print(roz)
+```
 
+```{r, fig.height = 4.5}
 # print first picture of resulting tree
 plot(roz, margin = 0.1)
 text(roz)
+```
 
+```{r, fig.height = 4.5}
 # print second picture of resulting tree
 plot(roz, margin = 0.1, uniform = TRUE)
 text(roz)
 ```
-
-Space for two pictures:
-
-\vspace{9cm}
 
 What's the predicted ozone level for a day with a temperature of 75 degrees and an inversion base height of 2000 feet?
 
@@ -96,11 +96,9 @@ $\widehat{f}(x_i) = \sum_{m = 1}^{\vert T \vert} I_{R_m}(x_i) \hat{y}_{m}$
  * $I_{R_m}(x_i) = \begin{cases} 1 \text{ if $x_i$ is in region $R_m$} \\ 0 \text{ otherwise} \end{cases}$
  * $\hat{y}_m$ is the predicted value in terminal node number $m$.
 
-\newpage
+## More covariates:
 
-More covariates:
-
-```{r}
+```{r, fig.height = 3.5}
 roz_2 <- rpart(O3 ~ ., data = ozone)
 
 # print picture of resulting tree
@@ -123,28 +121,8 @@ heart <- read_csv("http://www.evanlray.com/data/islr/Heart.csv") %>%
 head(heart)
 ```
 
-```{r}
-# too many variables for a pairs plot to be effective
-# instead, plot each explanatory variable by response
-make_plot <- function(explanatory_var) {
-  if(is.numeric(heart[[explanatory_var]])) {
-    p <- ggplot(data = heart, mapping = aes_string(x = explanatory_var, color = "AHD")) + geom_density()
-  } else {
-    p <- ggplot(data = heart, mapping = aes_string(x = explanatory_var, fill = "AHD")) + geom_bar()
-  }
-  
-  return(p)
-}
-
-ncol(heart)
-plots <- map(colnames(heart)[1:13], make_plot)
-
-p_combined <- marrangeGrob(grobs = plots, ncol = 3, nrow = 5)
-print(p_combined)
-```
-
-```{r}
-rhd <- rpart(AHD ~ ., data = heart)
+```{r, fig.height=3.33}
+rhd <- rpart(AHD ~ ., data = as.data.frame(heart))
 
 # print second picture of resulting tree
 plot(rhd, margin = 0.1, uniform = TRUE)
@@ -155,6 +133,19 @@ levels(heart$ChestPain)
 ```
 
 What's the predicted class for someone whose Thallium stress test results are normal, whose chest pain symptoms are typical, and has a "Ca" (not sure what that stands for) of 2?
+
+```{r, echo = FALSE}
+person_to_classify <- heart %>% slice(1) %>% as.data.frame()
+person_to_classify[1, "Thal"] <- "normal"
+person_to_classify[1, "ChestPain"] <- "typical"
+person_to_classify[1, "Ca"] <- 2L
+person_to_classify[1, -c(3, 12, 13)] <- NA
+```
+
+```{r}
+head(person_to_classify)
+predict(rhd, newdata = person_to_classify, type = "class")
+```
 
 \newpage
 
