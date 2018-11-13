@@ -1,0 +1,14 @@
+base
+readr
+dplyr
+ggplot2
+gridExtra
+purrr
+Matrix
+foreach
+glmnet
+lattice
+caret
+rpart
+tidyr
+bindrcpp

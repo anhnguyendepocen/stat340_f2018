@@ -341,7 +341,7 @@ Start on Chapter 8: Tree-Based Methods and Ensembles
 
 #### Fri, Nov 2
  * **In class**, we will work on:
-    * Introduction to Ensembles [pdf](20181102_intro_ensembles/20181102_stacking_ionosphere.pdf)
+    * Introduction to Ensembles [pdf](materials/20181102_intro_ensembles/20181102_stacking_ionosphere.pdf)
  * **After class**, please work on:
     * Lab 09: due as 1/2-value homework assignment on Monday Nov 5
     * PS 08: due Monday Nov 5
@@ -364,7 +364,7 @@ Chapter 8: Tree-Based Methods
 
 #### Wed, Nov 7
  * **In class**, we will work on:
-    * Random forests
+    * Random forests: [pdf](materials/20181109_rf/20181109_rf.pdf)
     * Start lab about stacking and random forests
 
 #### Fri, Nov 9
@@ -376,13 +376,15 @@ Chapter 8: Tree-Based Methods
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week11", FALSE, "Week 11: Nov 12 -- 16",
+make_week_box("week11", TRUE, "Week 11: Nov 12 -- 16",
 "
 Gradient Tree Boosting
 
-**Midterm 2 this week** - take home.
+**Midterm 2 this week** - take home, due Tuesday Nov 20.
 
 #### Mon, Nov 12
+ * Overview of ideas so far: [pdf](materials/20181112_overview_missing/overview.pdf)
+ * Imputing Missing Data: [pdf](materials/20181112_overview_missing/20181112_missing_data.pdf)
 
 #### Wed, Nov 14
 

@@ -1,0 +1,566 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={First Thoughts on Missing Data},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{First Thoughts on Missing Data}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+\usepackage{booktabs}
+\usepackage{multicol}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}\label{introduction}
+
+We could spend at least a full semester talking about how to deal with
+missing data. Today I will just talk about a couple of first ideas.
+
+\subsection{Types of Missing Data}\label{types-of-missing-data}
+
+All descriptions/quotes below from
+\url{https://en.wikipedia.org/wiki/Missing_data\#Types_of_missing_data}
+
+\begin{itemize}
+\tightlist
+\item
+  Missing completely at random (MCAR): ``the events that lead to any
+  particular data-item being missing are independent both of observable
+  variables and of unobservable parameters of interest''. In terms of
+  statistical validity, it's ok to just drop the cases with missing data
+  from our analysis.
+\item
+  Missing at random(MAR): ``missingness can be fully accounted for by
+  variables where there is complete information\ldots{} An example is
+  that males are less likely to fill in a depression survey but this has
+  nothing to do with their level of depression, after accounting for
+  maleness.'' We have to be careful, but it's possible to analyze these
+  data and obtain valid results.
+\item
+  Not missing at random (NMAR): ``the value of the variable that's
+  missing is related to the reason it's missing\ldots{} this would occur
+  if men failed to fill in a depression survey \emph{because} of their
+  level of depression.''
+\end{itemize}
+
+\subsection{Running Data Set Example}\label{running-data-set-example}
+
+Our data come from Elements of Statistical Learning. The following quote
+is from the documentation:
+
+\begin{quote}
+A total of N=9409 questionnaires containg 502 questions were filled out
+by shopping mall customers in the San Francisco Bay area.
+
+The dataset income.data is an extract from this survey. It consists of
+14 demographic attributes.
+\end{quote}
+
+Our goal is to predict a household's annual income based on their
+responses to the other survey questions. As with basically all survey
+data, there is a lot of missing data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(readr)}
+\KeywordTok{library}\NormalTok{(dplyr)}
+\KeywordTok{library}\NormalTok{(ggplot2)}
+\KeywordTok{library}\NormalTok{(gridExtra)}
+\KeywordTok{library}\NormalTok{(purrr)}
+\KeywordTok{library}\NormalTok{(glmnet)}
+\KeywordTok{library}\NormalTok{(caret)}
+\KeywordTok{library}\NormalTok{(rpart)}
+\KeywordTok{library}\NormalTok{(tidyr)}
+
+\CommentTok{# read in data}
+\NormalTok{marketing <-}\StringTok{ }\KeywordTok{read_table2}\NormalTok{(}\StringTok{"http://www.evanlray.com/data/ESL/marketing.data"}\NormalTok{, }\DataTypeTok{col_names =} \OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in rbind(names(probs), probs_f): number of columns of result is not
+## a multiple of vector length (arg 2)
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: 1 parsing failure.
+## row # A tibble: 1 x 5 col     row col   expected   actual   file                                     expected   <int> <chr> <chr>      <chr>    <chr>                                    actual 1  8994 <NA>  14 columns 1 colum~ 'http://www.evanlray.com/data/ESL/marke~ file # A tibble: 1 x 5
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{names}\NormalTok{(marketing) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"household_income"}\NormalTok{, }\StringTok{"sex"}\NormalTok{, }\StringTok{"marital_status"}\NormalTok{, }\StringTok{"age"}\NormalTok{, }\StringTok{"education"}\NormalTok{, }\StringTok{"occupation"}\NormalTok{, }\StringTok{"time_in_bay_area"}\NormalTok{, }\StringTok{"dual_income"}\NormalTok{, }\StringTok{"num_household_members"}\NormalTok{, }\StringTok{"num_household_children"}\NormalTok{, }\StringTok{"householder_status"}\NormalTok{, }\StringTok{"home_type"}\NormalTok{, }\StringTok{"ethnicity"}\NormalTok{, }\StringTok{"home_language"}\NormalTok{)}
+
+\CommentTok{# convert factors to factors}
+\NormalTok{factor_vars <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"sex"}\NormalTok{, }\StringTok{"marital_status"}\NormalTok{, }\StringTok{"age"}\NormalTok{, }\StringTok{"education"}\NormalTok{, }\StringTok{"occupation"}\NormalTok{, }\StringTok{"time_in_bay_area"}\NormalTok{, }\StringTok{"dual_income"}\NormalTok{, }\StringTok{"householder_status"}\NormalTok{, }\StringTok{"home_type"}\NormalTok{, }\StringTok{"ethnicity"}\NormalTok{, }\StringTok{"home_language"}\NormalTok{)}
+\NormalTok{marketing <-}\StringTok{ }\NormalTok{marketing }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate_at}\NormalTok{(}\DataTypeTok{.vars =}\NormalTok{ factor_vars, factor)}
+
+\CommentTok{# last row was all NAs, drop it}
+\KeywordTok{tail}\NormalTok{(marketing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 14
+##   household_income sex   marital_status age   education occupation
+##              <int> <fct> <fct>          <fct> <fct>     <fct>     
+## 1                1 2     5              1     1         2         
+## 2                2 1     5              2     4         1         
+## 3                1 2     5              1     2         1         
+## 4                4 1     1              6     4         3         
+## 5                6 1     5              3     4         1         
+## 6               NA <NA>  <NA>           <NA>  <NA>      <NA>      
+## # ... with 8 more variables: time_in_bay_area <fct>, dual_income <fct>,
+## #   num_household_members <int>, num_household_children <int>,
+## #   householder_status <fct>, home_type <fct>, ethnicity <fct>,
+## #   home_language <fct>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{marketing <-}\StringTok{ }\NormalTok{marketing }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\KeywordTok{nrow}\NormalTok{(marketing))}
+
+\CommentTok{# Initial train/test split ("estimation"/test) and cross-validation folds}
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{107847}\NormalTok{)}
+\NormalTok{tt_inds <-}\StringTok{ }\NormalTok{caret}\OperatorTok{::}\KeywordTok{createDataPartition}\NormalTok{(marketing}\OperatorTok{$}\NormalTok{household_income, }\DataTypeTok{p =} \FloatTok{0.8}\NormalTok{)}
+\NormalTok{train_set <-}\StringTok{ }\NormalTok{marketing }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(tt_inds[[}\DecValTok{1}\NormalTok{]])}
+\NormalTok{test_set <-}\StringTok{ }\NormalTok{marketing }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\NormalTok{tt_inds[[}\DecValTok{1}\NormalTok{]])}
+
+\CommentTok{# how many missing values in each of train and test set?}
+\NormalTok{count_missing <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x) \{}
+  \KeywordTok{sum}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(x))}
+\NormalTok{\}}
+
+\KeywordTok{map_dbl}\NormalTok{(train_set, count_missing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       household_income                    sex         marital_status 
+##                      0                      0                    134 
+##                    age              education             occupation 
+##                      0                     66                    108 
+##       time_in_bay_area            dual_income  num_household_members 
+##                    746                      0                    298 
+## num_household_children     householder_status              home_type 
+##                      0                    198                    303 
+##              ethnicity          home_language 
+##                     51                    303
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(train_set)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 7196
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{map_dbl}\NormalTok{(test_set, count_missing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       household_income                    sex         marital_status 
+##                      0                      0                     26 
+##                    age              education             occupation 
+##                      0                     20                     28 
+##       time_in_bay_area            dual_income  num_household_members 
+##                    167                      0                     77 
+## num_household_children     householder_status              home_type 
+##                      0                     42                     54 
+##              ethnicity          home_language 
+##                     17                     56
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(test_set)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1797
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Function to calculate error rate}
+\NormalTok{calc_mse <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(observed, predicted) \{}
+  \KeywordTok{mean}\NormalTok{((observed }\OperatorTok{-}\StringTok{ }\NormalTok{predicted)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{What if we just drop any training set observations with
+missing
+values?}\label{what-if-we-just-drop-any-training-set-observations-with-missing-values}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{train_set_none_missing <-}\StringTok{ }\NormalTok{train_set }\OperatorTok{%>%}\StringTok{ }\KeywordTok{drop_na}\NormalTok{()}
+\KeywordTok{map_dbl}\NormalTok{(train_set_none_missing, count_missing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       household_income                    sex         marital_status 
+##                      0                      0                      0 
+##                    age              education             occupation 
+##                      0                      0                      0 
+##       time_in_bay_area            dual_income  num_household_members 
+##                      0                      0                      0 
+## num_household_children     householder_status              home_type 
+##                      0                      0                      0 
+##              ethnicity          home_language 
+##                      0                      0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(train_set_none_missing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 5462
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(train_set_none_missing) }\OperatorTok{/}\StringTok{ }\KeywordTok{nrow}\NormalTok{(train_set)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.7590328
+\end{verbatim}
+
+We just lost 24\% of our data!! :(
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rf_fit_none_missing <-}\StringTok{ }\KeywordTok{train}\NormalTok{(}
+  \DataTypeTok{form =}\NormalTok{ household_income }\OperatorTok{~}\StringTok{ }\NormalTok{.,}
+  \DataTypeTok{data =}\NormalTok{ train_set_none_missing,}
+  \DataTypeTok{method =} \StringTok{"rf"}\NormalTok{,}
+  \DataTypeTok{trControl =} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method =} \StringTok{"oob"}\NormalTok{,}
+    \DataTypeTok{returnResamp =} \StringTok{"all"}\NormalTok{,}
+    \DataTypeTok{savePredictions =} \OtherTok{TRUE}\NormalTok{),}
+  \DataTypeTok{tuneLength =} \DecValTok{1}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rf_preds_none_missing <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(rf_fit_none_missing, }\DataTypeTok{newdata =}\NormalTok{ test_set)}
+\KeywordTok{length}\NormalTok{(rf_preds_none_missing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1414
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{nrow}\NormalTok{(test_set)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1797
+\end{verbatim}
+
+\ldots{}and we can't even make predictions for everything in the test
+set. Test set MSE of \(\infty\)??
+
+OK, but what about for the observations where we were able to make a
+prediction?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{test_set_na_inds <-}\StringTok{ }\KeywordTok{which}\NormalTok{(}\KeywordTok{apply}\NormalTok{(test_set, }\DecValTok{1}\NormalTok{, }\ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{any}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(x)) \}))}
+\NormalTok{test_set_none_missing <-}\StringTok{ }\NormalTok{test_set }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\NormalTok{test_set_na_inds)}
+\KeywordTok{nrow}\NormalTok{(test_set_none_missing)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1414
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{calc_mse}\NormalTok{(rf_preds_none_missing, test_set_none_missing}\OperatorTok{$}\NormalTok{household_income)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 3.841832
+\end{verbatim}
+
+\subsection{Impute missing values with median/most commonly
+occurring?}\label{impute-missing-values-with-medianmost-commonly-occurring}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{impute_missing_median <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x) \{}
+\NormalTok{  x[}\KeywordTok{is.na}\NormalTok{(x)] <-}\StringTok{ }\KeywordTok{median}\NormalTok{(x, }\DataTypeTok{na.rm =} \OtherTok{TRUE}\NormalTok{)}
+  \KeywordTok{return}\NormalTok{(x)}
+\NormalTok{\}}
+
+\NormalTok{impute_missing_most_common <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x) \{}
+\NormalTok{  count_table <-}\StringTok{ }\KeywordTok{table}\NormalTok{(x)}
+\NormalTok{  x[}\KeywordTok{is.na}\NormalTok{(x)] <-}\StringTok{ }\KeywordTok{names}\NormalTok{(count_table)[}\KeywordTok{which.max}\NormalTok{(count_table)]}
+  \KeywordTok{return}\NormalTok{(x)}
+\NormalTok{\}}
+
+\NormalTok{marketing_median_impute <-}\StringTok{ }\NormalTok{marketing }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate_at}\NormalTok{(factor_vars, impute_missing_most_common) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate_at}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\StringTok{"num_household_members"}\NormalTok{, }\StringTok{"num_household_children"}\NormalTok{), impute_missing_median)}
+
+\NormalTok{train_set_median_impute <-}\StringTok{ }\NormalTok{marketing_median_impute }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(tt_inds[[}\DecValTok{1}\NormalTok{]])}
+\NormalTok{test_set_median_impute <-}\StringTok{ }\NormalTok{marketing_median_impute }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\NormalTok{tt_inds[[}\DecValTok{1}\NormalTok{]])}
+
+\NormalTok{rf_fit_median_impute <-}\StringTok{ }\KeywordTok{train}\NormalTok{(}
+  \DataTypeTok{form =} \KeywordTok{as.numeric}\NormalTok{(household_income) }\OperatorTok{~}\StringTok{ }\NormalTok{.,}
+  \DataTypeTok{data =}\NormalTok{ train_set_median_impute,}
+  \DataTypeTok{method =} \StringTok{"rf"}\NormalTok{,}
+  \DataTypeTok{trControl =} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method =} \StringTok{"oob"}\NormalTok{,}
+    \DataTypeTok{returnResamp =} \StringTok{"all"}\NormalTok{,}
+    \DataTypeTok{savePredictions =} \OtherTok{TRUE}\NormalTok{),}
+  \DataTypeTok{tuneLength =} \DecValTok{1}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rf_preds_median_impute_all_cases <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(rf_fit_median_impute, }\DataTypeTok{newdata =}\NormalTok{ test_set_median_impute)}
+\NormalTok{rf_error_median_impute <-}\StringTok{ }\KeywordTok{calc_mse}\NormalTok{(test_set}\OperatorTok{$}\NormalTok{household_income, rf_preds_median_impute_all_cases)}
+\NormalTok{rf_error_median_impute}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 3.977617
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{calc_mse}\NormalTok{(test_set_none_missing}\OperatorTok{$}\NormalTok{household_income, }
+         \KeywordTok{predict}\NormalTok{(rf_fit_median_impute, }\DataTypeTok{newdata =}\NormalTok{ test_set_median_impute }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\NormalTok{test_set_na_inds)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 3.829537
+\end{verbatim}
+
+\newpage
+
+\subsection{Impute by way of trees}\label{impute-by-way-of-trees}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{marketing_x <-}\StringTok{ }\NormalTok{marketing }\OperatorTok{%>%}\StringTok{ }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{household_income)}
+
+\NormalTok{fit_one_tree_and_predict_target <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(b, target_var) \{}
+\NormalTok{  fit_formula <-}\StringTok{ }\KeywordTok{as.formula}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(target_var, }\StringTok{" ~ ."}\NormalTok{))}
+\NormalTok{  tree_fit <-}\StringTok{ }\KeywordTok{train}\NormalTok{(fit_formula,}
+    \DataTypeTok{data =}\NormalTok{ marketing_x,}
+    \DataTypeTok{control =} \KeywordTok{rpart.control}\NormalTok{(}\DataTypeTok{xval =}\NormalTok{ 0L, }\DataTypeTok{maxsurrogate =} \DecValTok{3}\NormalTok{),}
+    \DataTypeTok{method =} \StringTok{"rpart"}\NormalTok{,}
+    \DataTypeTok{trControl =} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method =} \StringTok{"none"}\NormalTok{),}
+    \DataTypeTok{na.action =}\NormalTok{ na.rpart)}
+  
+\NormalTok{  marketing_target_imputed <-}\StringTok{ }\NormalTok{marketing_x[[target_var]]}
+\NormalTok{  missing_inds <-}\StringTok{ }\KeywordTok{which}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(marketing_target_imputed))}
+\NormalTok{  preds <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(tree_fit, }\DataTypeTok{newdata =}\NormalTok{ marketing_x }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(missing_inds), }\DataTypeTok{na.action =}\NormalTok{ na.rpart)}
+\NormalTok{  marketing_target_imputed[missing_inds] <-}\StringTok{ }\NormalTok{preds}
+  
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}
+      \DataTypeTok{x =}\NormalTok{ marketing_target_imputed}
+\NormalTok{  )}
+  \KeywordTok{names}\NormalTok{(result) <-}\StringTok{ }\NormalTok{target_var}
+  
+  \KeywordTok{return}\NormalTok{(result)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{marketing_x_imputed <-}\StringTok{ }\KeywordTok{map_dfc}\NormalTok{(}\KeywordTok{colnames}\NormalTok{(marketing_x), fit_one_tree_and_predict_target, }\DataTypeTok{b =}\NormalTok{ 1L)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{train_x_imputed <-}\StringTok{ }\NormalTok{marketing_x_imputed }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(tt_inds[[}\DecValTok{1}\NormalTok{]])}
+\NormalTok{test_x_imputed <-}\StringTok{ }\NormalTok{marketing_x_imputed }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\NormalTok{tt_inds[[}\DecValTok{1}\NormalTok{]])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{y_train <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(train_set}\OperatorTok{$}\NormalTok{household_income)}
+\NormalTok{rf_fit_tree_impute <-}\StringTok{ }\KeywordTok{train}\NormalTok{(}
+  \DataTypeTok{x =}\NormalTok{ train_x_imputed,}
+  \DataTypeTok{y =}\NormalTok{ y_train,}
+  \DataTypeTok{method =} \StringTok{"rf"}\NormalTok{,}
+  \DataTypeTok{trControl =} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method =} \StringTok{"oob"}\NormalTok{,}
+    \DataTypeTok{returnResamp =} \StringTok{"all"}\NormalTok{,}
+    \DataTypeTok{savePredictions =} \OtherTok{TRUE}\NormalTok{),}
+  \DataTypeTok{tuneLength =} \DecValTok{1}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rf_error_tree_impute <-}\StringTok{ }\KeywordTok{calc_mse}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(test_set}\OperatorTok{$}\NormalTok{household_income), }\KeywordTok{predict}\NormalTok{(rf_fit_tree_impute, }\DataTypeTok{newdata =}\NormalTok{ test_x_imputed))}
+\NormalTok{rf_error_tree_impute}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 3.932311
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{calc_mse}\NormalTok{(test_set_none_missing}\OperatorTok{$}\NormalTok{household_income, }
+  \KeywordTok{predict}\NormalTok{(rf_fit_tree_impute, }\DataTypeTok{newdata =}\NormalTok{ test_set_median_impute }\OperatorTok{%>%}\StringTok{ }\KeywordTok{slice}\NormalTok{(}\OperatorTok{-}\NormalTok{test_set_na_inds)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 3.823088
+\end{verbatim}
+
+
+\end{document}
