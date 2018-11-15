@@ -387,8 +387,12 @@ Gradient Tree Boosting
  * Imputing Missing Data: [pdf](materials/20181112_overview_missing/20181112_missing_data.pdf)
 
 #### Wed, Nov 14
+ * Start on Gradient Tree Bosting: [pdf](materials/20181114_intro_gradient_boosting/20181114_intro_gradient_boosting.pdf)
+ * Time for working on projects
 
 #### Fri, Nov 16
+ * Lab on Gradient Tree Boosting
+ * Time for working on projects
 "
   )
 ```
