@@ -1,0 +1,936 @@
+---
+title: "Gradient Tree Boosting for Binary Classification"
+output:
+  pdf_document:
+    keep_tex: true
+geometry: margin=1.5cm
+header-includes:
+   - \usepackage{booktabs}
+   - \usepackage{multicol}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+# Introduction
+
+## Reminder of gradient tree boosting for regression
+
+For regression, the gradient boosting procedure looks something like this (different implementations vary slightly):
+
+ 1. Start with a simple initial model
+    * For regression, might start by predicting the mean of the response variable
+    * xgboost effectively starts by predicting 0 for all observations
+ 2. Repeat the following:
+    a. Fit a model that is specifically tuned to training set observations that the current ensemble does not predict well
+    b. Update the ensemble by adding in this new model
+
+We thought about step 2 a in two ways:
+
+ * **specific to regression**: fit the new model to the residuals from the current working ensemble
+    * Adding the resulting model to the current working ensemble gives an updated ensemble with smaller residuals
+ * **a more generally applicable idea**: fit the new model to the gradient of $-\frac{1}{2} RSS$.
+    * A better prediction has smaller RSS, larger $-\frac{1}{2} RSS$
+    * The derivative $\frac{\partial}{\partial \hat{y}_i} -\frac{1}{2} RSS$ tells us how to change the current ensemble's prediction for observation $i$ in order to increase $-\frac{1}{2} RSS$
+        * If $\frac{\partial}{\partial \hat{y}_i} -\frac{1}{2} RSS > 0$, we should increase $\hat{y}_i$
+        * If $\frac{\partial}{\partial \hat{y}_i} -\frac{1}{2} RSS < 0$, we should decrease $\hat{y}_i$
+        * If $\frac{\partial}{\partial \hat{y}_i} -\frac{1}{2} RSS$ is large in magnitude, we should make a big change to $\hat{y}_i$
+    * The gradient vector $\left(\frac{\partial}{\partial \hat{y}_1} -\frac{1}{2} RSS, \ldots, \frac{\partial}{\partial \hat{y}_1} -\frac{1}{2} RSS \right)$ collects this information together
+    * If we're doing regression and optimizing RSS, this works out to exactly the vector of residuals
+    * Fit next model using this gradient as the response.
+    
+
+```{r, echo=FALSE, message = FALSE, warning=FALSE}
+library(purrr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(rpart)
+
+set.seed(96442)
+
+n <- 25
+train_data <- data.frame(
+  x = runif(n = n, min = -10, max = 10)
+) %>%
+  mutate(
+    y = 50 + 2 * x - 12 * x + 0.2 * x^3 + rnorm(n, sd = 10)
+  )
+```
+
+```{r, echo=FALSE}
+calc_f_hat <- function(x, b0, tree_fits, tree_weights) {
+  x_df <- data.frame(x = x)
+  
+  if(length(tree_fits) > 0) {
+    tree_preds <- map_dfc(tree_fits, predict, newdata = x_df) %>%
+      as.matrix()
+    tree_preds <- tree_preds %*% tree_weights
+    tree_preds <- tree_preds[, 1]
+  } else {
+    tree_preds <- rep(0, length(x))
+  }
+  
+  results <- b0 + tree_preds
+  
+  return(results)
+}
+```
+
+```{r, fig.height=4.5, echo = FALSE}
+component_alpha <- 0.3
+component_num <- 1
+
+b0 <- mean(train_data$y)
+tree_fits <- vector("list", 0)
+tree_weights <- NULL
+
+x_grid <- data.frame(
+  x = seq(from = -10, to = 10, length = 501)
+)
+
+component_model_preds_grid <- x_grid %>%
+  mutate(
+    component_num = component_num,
+    y_hat = b0
+  )
+
+plot_df_grid <- x_grid %>%
+  mutate(
+    y_hat = calc_f_hat(x, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights)
+  )
+
+plot_df <- train_data %>%
+  mutate(
+    y_hat = calc_f_hat(x, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights),
+    derivative = y - y_hat # 2 * (y - y_hat)
+  )
+
+p_comp <- ggplot() +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = x, y = y_hat, group = factor(component_num)), alpha = 0.2, color = "red") +
+  ggtitle("All Current Component Model Predictions")
+
+p1 <- ggplot() +
+  geom_errorbar(data = plot_df %>% filter(y < y_hat), mapping = aes(x = x, ymin = y, ymax = y_hat), color = "cornflowerblue") +
+  geom_errorbar(data = plot_df %>% filter(y >= y_hat), mapping = aes(x = x, ymin = y_hat, ymax = y), color = "cornflowerblue") +
+  geom_point(data = train_data, mapping = aes(x = x, y = y)) +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = x, y = y_hat, group = factor(component_num)), alpha = component_alpha, color = "red") +
+  geom_line(data = plot_df_grid, mapping = aes(x = x, y = y_hat), color = "red") +
+  geom_point(data = plot_df, mapping = aes(x = x, y = y_hat), color = "red") +
+  xlim(c(-10, 10)) +
+  ylab(" \ny\n ") +
+  ggtitle("Current Ensemble Predictions")
+
+p2 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = x, y = derivative), color = "cornflowerblue") +
+  geom_hline(yintercept = 0) +
+  xlim(c(-10, 10)) +
+  ylab(expression(paste(frac(partialdiff, partialdiff * hat(y)[i]), " ", frac(-1, 2), " RSS = residual", phantom(i)[i]))) +
+  ggtitle("Response variable for next component model:\nWhere does current ensemble go wrong?")
+
+#grid.arrange(p_comp, p1, p2, ncol = 1)
+grid.arrange(p1, p2, ncol = 1)
+```
+
+\newpage
+
+## Running example: Birthweight and bronchopulmonary dysplasia
+
+Can we estimate probability of bronchopulmonary dysplasia (BPD, a lung disease that affects newborns) as a function of the baby's birth weight?
+
+Data from Pagano, M. and Gauvreau, K. (1993). *Principles of Biostatistics*. Duxbury Press.
+
+\begin{align*}
+Y_i &= \begin{cases} 1 & \text{ if baby number $i$ has BPD} \\ 0 & \text{ otherwise} \end{cases} \\
+X_i &= \text{ birth weight for baby number $i$}
+\end{align*}
+
+```{r, message = FALSE, warning=FALSE, echo = FALSE}
+library(tidyverse)
+bpd <- read_table2("http://www.stat.cmu.edu/~larry/all-of-nonpar/=data/bpd.dat")
+```
+
+```{r, eval = TRUE}
+head(bpd)
+```
+
+
+```{r, message = FALSE, warning=FALSE, fig.height=1.75, echo = TRUE}
+ggplot(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_point()
+```
+
+## Reminder of logistic regression
+
+\begin{align*}
+P(Y_i = 1 | X_i) = p(x_i) &= \frac{e^{\beta_0 + \beta_1 x_i}}{1 + e^{\beta_0 + \beta_1 x_i}}
+\end{align*}
+
+ * Take something that looks like a linear regression model, pass it through the transformation $a \mapsto \frac{e^a}{1 + e^a}$ to get probabilities between 0 and 1.
+
+```{r, echo = FALSE}
+fit <- glm(BPD ~ birthweight, data = bpd, family = binomial)
+```
+
+
+```{r, echo = FALSE, fig.height = 1.75}
+#' Calculate predictions based on the logistic regression fit called "fit"
+#' (obtained on page 5)
+#'
+#' @param x a vector of values for birthweight at which we want to make predictions
+#'
+#' @return a vector of estimated probabilitities that there will be O-ring damage
+pred_logistic <- function(x) {
+  predict(fit, newdata = data.frame(birthweight = x), type = "response")
+}
+
+ggplot(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_point(position = position_jitter(width = 0, height = 0.1)) +
+  stat_function(fun = pred_logistic)
+```
+
+A big idea for today: instead of a linear regression model, we could pass a regression tree model through this transformation.
+
+\newpage
+
+## Motivating Pictures for Method:
+
+Start with a simple model:
+
+$p(x_i) = \widehat{P}(Y_i = 1 \vert x_i) = \frac{e^0}{1 + e^0} = 0.5$ for all values of $x_i$.
+
+```{r, echo=FALSE}
+calc_f_hat <- function(x, b0, tree_fits, tree_weights) {
+  x_df <- data.frame(birthweight = x)
+  
+  if(length(tree_fits) > 0) {
+    tree_preds <- map_dfc(tree_fits, predict, newdata = x_df) %>%
+      as.matrix()
+    tree_preds <- tree_preds %*% tree_weights
+    tree_preds <- tree_preds[, 1]
+  } else {
+    tree_preds <- rep(0, length(x))
+  }
+  
+  results <- b0 + tree_preds
+  
+  results <- exp(results)/(1 + exp(results))
+  
+  return(results)
+}
+```
+
+```{r, fig.height=6, echo = FALSE}
+component_alpha <- 0.3
+component_num <- 0
+b0 <- 0
+tree_fits <- vector("list", 0)
+tree_weights <- NULL
+
+x_grid <- data.frame(
+  birthweight = seq(from = 400, to = 1800, length = 501)
+)
+
+component_model_preds_grid <- x_grid %>%
+  mutate(
+    component_num = component_num,
+    y_hat = b0
+  )
+
+plot_df_grid <- x_grid %>%
+  mutate(
+    y_hat = calc_f_hat(birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights)
+  )
+
+plot_df <- bpd %>%
+  mutate(
+    y_hat = calc_f_hat(birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights),
+    derivative = BPD - y_hat
+  )
+
+p_comp <- ggplot() +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = birthweight, y = y_hat, group = factor(component_num)), alpha = 0.2, color = "red") +
+  ggtitle("All Current Component Model Predictions")
+
+p1 <- ggplot() +
+  geom_errorbar(data = plot_df %>% filter(BPD < y_hat), mapping = aes(x = birthweight, ymin = BPD, ymax = y_hat), color = "cornflowerblue") +
+  geom_errorbar(data = plot_df %>% filter(BPD >= y_hat), mapping = aes(x = birthweight, ymin = y_hat, ymax = BPD), color = "cornflowerblue") +
+  geom_point(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_line(data = plot_df_grid, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Ensemble Predictions")
+
+p2 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("Response variable for next component model:\nWhere does current ensemble go wrong?")
+
+#grid.arrange(p_comp, p1, p2, ncol = 1)
+grid.arrange(p1, p2, ncol = 1)
+```
+
+\newpage
+
+```{r, fig.height=9, echo=FALSE}
+component_num <- component_num + 1
+
+new_tree <- rpart(derivative ~ birthweight, data = plot_df,
+  control = rpart.control(
+    maxdepth = 1,
+    cp = 0,
+    maxsurrogate = 0,
+    maxcompete = 0,
+    minsplit = 2,
+    minbucket = 1)
+  )
+tree_fits <- c(tree_fits, list(new_tree))
+tree_weights <- c(tree_weights, 1)
+
+new_tree_preds_grid_df <- x_grid %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = x_grid),
+    component_num = component_num
+  )
+
+new_tree_preds_df <- bpd %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = bpd),
+    component_num = component_num
+  )
+
+component_model_preds_grid <- bind_rows(
+  component_model_preds_grid,
+  new_tree_preds_grid_df
+)
+
+p0 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_line(data = new_tree_preds_grid_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = new_tree_preds_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("New component model fit")
+
+plot_df_grid <- x_grid %>%
+  mutate(
+    y_hat = calc_f_hat(x_grid$birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights)
+  )
+
+plot_df <- bpd %>%
+  mutate(
+    y_hat = calc_f_hat(birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights),
+    derivative = BPD - y_hat
+  )
+
+p_comp <- ggplot() +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = birthweight, y = y_hat, group = factor(component_num)), alpha = component_alpha, color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Component Model Predictions")
+
+
+p1 <- ggplot() +
+  geom_errorbar(data = plot_df %>% filter(BPD < y_hat),
+    mapping = aes(x = birthweight, ymin = BPD, ymax = y_hat),
+    color = "cornflowerblue") +
+  geom_errorbar(data = plot_df %>% filter(BPD >= y_hat),
+    mapping = aes(x = birthweight, ymin = y_hat, ymax = BPD),
+    color = "cornflowerblue") +
+  geom_point(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_line(data = plot_df_grid, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Ensemble Predictions")
+
+p2 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("Response variable for next component model:\nWhere does current ensemble go wrong?")
+
+grid.arrange(p0, p_comp, p1, p2, ncol = 1)
+```
+
+
+\newpage
+
+```{r, fig.height=9, echo=FALSE}
+component_num <- component_num + 1
+
+new_tree <- rpart(derivative ~ birthweight, data = plot_df,
+  control = rpart.control(
+    maxdepth = 1,
+    cp = 0,
+    maxsurrogate = 0,
+    maxcompete = 0,
+    minsplit = 2,
+    minbucket = 1)
+  )
+tree_fits <- c(tree_fits, list(new_tree))
+tree_weights <- c(tree_weights, 1)
+
+new_tree_preds_grid_df <- x_grid %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = x_grid),
+    component_num = component_num
+  )
+
+new_tree_preds_df <- bpd %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = bpd),
+    component_num = component_num
+  )
+
+component_model_preds_grid <- bind_rows(
+  component_model_preds_grid,
+  new_tree_preds_grid_df
+)
+
+p0 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_line(data = new_tree_preds_grid_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = new_tree_preds_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("New component model fit")
+
+plot_df_grid <- x_grid %>%
+  mutate(
+    y_hat = calc_f_hat(x_grid$birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights)
+  )
+
+plot_df <- bpd %>%
+  mutate(
+    y_hat = calc_f_hat(birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights),
+    derivative = BPD - y_hat
+  )
+
+p_comp <- ggplot() +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = birthweight, y = y_hat, group = factor(component_num)), alpha = component_alpha, color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Component Model Predictions")
+
+
+p1 <- ggplot() +
+  geom_errorbar(data = plot_df %>% filter(BPD < y_hat),
+    mapping = aes(x = birthweight, ymin = BPD, ymax = y_hat),
+    color = "cornflowerblue") +
+  geom_errorbar(data = plot_df %>% filter(BPD >= y_hat),
+    mapping = aes(x = birthweight, ymin = y_hat, ymax = BPD),
+    color = "cornflowerblue") +
+  geom_point(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_line(data = plot_df_grid, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Ensemble Predictions")
+
+p2 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("Response variable for next component model:\nWhere does current ensemble go wrong?")
+
+grid.arrange(p0, p_comp, p1, p2, ncol = 1)
+```
+
+
+\newpage
+
+```{r, fig.height=9, echo=FALSE}
+component_num <- component_num + 1
+
+new_tree <- rpart(derivative ~ birthweight, data = plot_df,
+  control = rpart.control(
+    maxdepth = 1,
+    cp = 0,
+    maxsurrogate = 0,
+    maxcompete = 0,
+    minsplit = 2,
+    minbucket = 1)
+  )
+tree_fits <- c(tree_fits, list(new_tree))
+tree_weights <- c(tree_weights, 1)
+
+new_tree_preds_grid_df <- x_grid %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = x_grid),
+    component_num = component_num
+  )
+
+new_tree_preds_df <- bpd %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = bpd),
+    component_num = component_num
+  )
+
+component_model_preds_grid <- bind_rows(
+  component_model_preds_grid,
+  new_tree_preds_grid_df
+)
+
+p0 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_line(data = new_tree_preds_grid_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = new_tree_preds_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("New component model fit")
+
+plot_df_grid <- x_grid %>%
+  mutate(
+    y_hat = calc_f_hat(x_grid$birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights)
+  )
+
+plot_df <- bpd %>%
+  mutate(
+    y_hat = calc_f_hat(birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights),
+    derivative = BPD - y_hat
+  )
+
+p_comp <- ggplot() +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = birthweight, y = y_hat, group = factor(component_num)), alpha = component_alpha, color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Component Model Predictions")
+
+
+p1 <- ggplot() +
+  geom_errorbar(data = plot_df %>% filter(BPD < y_hat),
+    mapping = aes(x = birthweight, ymin = BPD, ymax = y_hat),
+    color = "cornflowerblue") +
+  geom_errorbar(data = plot_df %>% filter(BPD >= y_hat),
+    mapping = aes(x = birthweight, ymin = y_hat, ymax = BPD),
+    color = "cornflowerblue") +
+  geom_point(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_line(data = plot_df_grid, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Ensemble Predictions")
+
+p2 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("Response variable for next component model:\nWhere does current ensemble go wrong?")
+
+grid.arrange(p0, p_comp, p1, p2, ncol = 1)
+```
+
+\newpage
+
+...10 more...
+
+```{r, fig.height=9, echo=FALSE}
+for(i in 1:10) {
+component_num <- component_num + 1
+
+new_tree <- rpart(derivative ~ birthweight, data = plot_df,
+  control = rpart.control(
+    maxdepth = 1,
+    cp = 0,
+    maxsurrogate = 0,
+    maxcompete = 0,
+    minsplit = 2,
+    minbucket = 1)
+  )
+tree_fits <- c(tree_fits, list(new_tree))
+tree_weights <- c(tree_weights, 1)
+
+new_tree_preds_grid_df <- x_grid %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = x_grid),
+    component_num = component_num
+  )
+
+new_tree_preds_df <- bpd %>%
+  mutate(
+    y_hat = predict(new_tree, newdata = bpd),
+    component_num = component_num
+  )
+
+component_model_preds_grid <- bind_rows(
+  component_model_preds_grid,
+  new_tree_preds_grid_df
+)
+plot_df_grid <- x_grid %>%
+  mutate(
+    y_hat = calc_f_hat(x_grid$birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights)
+  )
+
+plot_df <- bpd %>%
+  mutate(
+    y_hat = calc_f_hat(birthweight, b0 = b0, tree_fits = tree_fits, tree_weights = tree_weights),
+    derivative = BPD - y_hat
+  )
+
+}
+
+p0 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_line(data = new_tree_preds_grid_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = new_tree_preds_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("New component model fit")
+
+p_comp <- ggplot() +
+  geom_line(data = component_model_preds_grid, mapping = aes(x = birthweight, y = y_hat, group = factor(component_num)), alpha = component_alpha, color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Component Model Predictions")
+
+
+p1 <- ggplot() +
+  geom_errorbar(data = plot_df %>% filter(BPD < y_hat),
+    mapping = aes(x = birthweight, ymin = BPD, ymax = y_hat),
+    color = "cornflowerblue") +
+  geom_errorbar(data = plot_df %>% filter(BPD >= y_hat),
+    mapping = aes(x = birthweight, ymin = y_hat, ymax = BPD),
+    color = "cornflowerblue") +
+  geom_point(data = bpd, mapping = aes(x = birthweight, y = BPD)) +
+  geom_line(data = plot_df_grid, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = y_hat), color = "red") +
+  xlim(c(400, 1800)) +
+  ggtitle("Current Ensemble Predictions")
+
+p2 <- ggplot() +
+  geom_point(data = plot_df, mapping = aes(x = birthweight, y = derivative), color = "cornflowerblue") +
+  geom_hline(yintercept = 0) +
+  xlim(c(400, 1800)) +
+  ylab("residual") +
+  ggtitle("Response variable for next component model:\nWhere does current ensemble go wrong?")
+
+grid.arrange(p0, p_comp, p1, p2, ncol = 1)
+```
+
+## Detour: Details of Estimation for Logistic Regression
+
+#### Formal Model Statement
+
+\begin{align*}
+Y_i &\sim \text{Bernoulli}(p(x_i)) \text{ where} \\
+p(x_i) &= \frac{e^{\beta_0 + \beta_1 x_i}}{1 + e^{\beta_0 + \beta_1 x_i}},
+\end{align*}
+
+with each $Y_i$ independent of the others.
+
+This means that according to the model, $P(Y_i = 1) = p(x_i)$ and $P(Y_i = 0) = 1 - p(x_i)$.
+
+#### Joint Probability of Observed Data
+
+For a fixed value of $\beta_0$ and $\beta_1$, what is the probability assigned to the observed data $y_1, \ldots, y_n$?
+
+\begin{align*}
+&P(Y_1 = y_1, Y_2 = y_2, \ldots, Y_n = y_n \vert x_1, \ldots, x_n) = P(Y_1 = y_1 \vert x_1) P(Y_2 = y_2 \vert x_2) \cdots P(Y_n = y_n \vert x_n) \\
+&\qquad = \prod_{i: y_i = 1} p(x_i) \prod_{i: y_i = 0} \{1 - p(x_i)\} \\
+&\qquad = \prod_{i: y_i = 1} \frac{e^{\beta_0 + \beta_1 x_i}}{1 + e^{\beta_0 + \beta_1 x_i}} \prod_{i: y_i = 0} \frac{1}{1 + e^{\beta_0 + \beta_1 x_i}}
+\end{align*}
+
+For example, the parameter estimates for our model fit are $\hat{\beta}_0 = 4.03429128$ and $\hat{\beta}_1 = -0.00422914$.
+
+The joint probability assigned to the data is:
+
+```{r}
+bpd_augmented <- bpd %>%
+  mutate(
+    est_prob_Y_eq_1 =
+      exp(4.03429128 - 0.00422914 * birthweight) / (1 + exp(4.03429128 - 0.00422914 * birthweight)),
+    est_prob_Y_eq_y = ifelse(BPD == 1, est_prob_Y_eq_1, 1 - est_prob_Y_eq_1)
+  )
+
+head(bpd_augmented)
+nrow(bpd_augmented)
+
+prod(bpd_augmented$est_prob_Y_eq_y)
+0.5^nrow(bpd_augmented)
+```
+
+\newpage
+
+#### Maximum likelihood estimation
+
+The best choice of $\beta_0$ and $\beta_1$ assigns highest probability to the observed data.
+
+$\max_{\beta_0, \beta_1} \,\,\, \prod_{i: y_i = 1} \frac{e^{\beta_0 + \beta_1 x_i}}{1 + e^{\beta_0 + \beta_1 x_i}} \prod_{i: y_i = 0} \frac{1}{1 + e^{\beta_0 + \beta_1 x_i}}$
+
+The function we are optimizing here is called the **likelihood function**:
+
+$\text{Likelihood}(\beta_0, \beta_1) = \prod_{i: y_i = 1} \frac{e^{\beta_0 + \beta_1 x_i}}{1 + e^{\beta_0 + \beta_1 x_i}} \prod_{i: y_i = 0} \frac{1}{1 + e^{\beta_0 + \beta_1 x_i}}$
+
+Picture 1:
+
+```{r, echo = FALSE, cache = TRUE}
+#' Function to calculate probability of observed data in bpd data set
+#'
+#' @param beta_0 a value for the intercept parameter in the logistic regression model
+#' @param beta_1 a value for the slope parameter in the logistic regression model
+#'
+#' @return joint probability of the observed data in bpd data set,
+#' if the specified parameters are used in a logistic regression model
+calc_prob <- function(beta_0, beta_1) {
+  bpd_augmented <- bpd %>%
+    mutate(
+      est_prob_Y_eq_1 = exp(beta_0 + beta_1 * birthweight) / (1 + exp(beta_0 + beta_1 * birthweight)),
+      est_prob_Y_eq_y = ifelse(BPD == 1, est_prob_Y_eq_1, 1 - est_prob_Y_eq_1)
+    )
+  
+  prod(bpd_augmented$est_prob_Y_eq_y)
+}
+
+# Set up a grid of values to use in making a plot
+# I chose these through experimentation to make the plot look "nice"
+beta_0_min <- 4.0342913 - 1
+beta_0_max <- 4.0342913 + 1
+beta_1_min <- -0.0042291 - 0.001
+beta_1_max <- -0.0042291 + 0.001
+
+betas_grid <- expand.grid(
+  beta_0 = seq(from = beta_0_min, to = beta_0_max, length = 201),
+  beta_1 = seq(from = beta_1_min, to = beta_1_max, length = 201)
+)
+
+# Add a new variable to betas_grid data frame, the probablity of the
+# observed data in a logistic regression model with the specified values of
+# beta_0 and beta_1
+betas_grid <- betas_grid %>%
+  mutate(
+    data_prob = pmap_dbl(betas_grid, calc_prob)
+  )
+
+#head(betas_grid)
+```
+
+```{r, echo = FALSE}
+# Data frame with the maximum likelihood estimates of the parameters
+mle_est <- data.frame(
+  beta_0 = 4.0342913,
+  beta_1 = -0.0042291,
+  est_name = "Maximum Likelihood Estimate"
+)
+
+# Make a plot
+# geom_raster fills in colors in a grid of rectangular cells
+# scale_fill_viridis_c is a colorblind-friendly color palette for continuous variables
+# expression is R's "plotmath" expressions, for greek letters and similar
+ggplot() +
+  geom_raster(data = betas_grid, mapping = aes(x = beta_0, y = beta_1, fill = data_prob)) +
+  geom_point(data = mle_est, mapping = aes(x = beta_0, y = beta_1, shape = est_name)) +
+  scale_shape_manual("Maximum\nLikelihood\nEstimate", labels = NULL, values = 3) +
+  scale_fill_gradientn("Probability\nof Observed\nData", colors = c("#0D0887FF", "#6A00A8FF", "#B12A90FF", "#E16462FF", "#FCA636FF", "#F0F921FF")) +
+#  xlim(c(4.0342913 - 0.3, 4.0342913 + 0.3)) +
+#  ylim(c(-0.0042291 - 0.013, -0.0042291 + 0.013)) +
+  xlab(expression(beta[0])) +
+  ylab(expression(beta[1]))
+```
+
+Picture 2:
+
+```{r, echo = FALSE, fig.height = 1.75}
+# Fit logistic regression model
+fit <- glm(BPD ~ birthweight, data = bpd, family = binomial)
+
+#' Function to calculate probability of observed data in bpd data set
+#'
+#' @param beta_0 a value for the intercept parameter in the logistic regression model
+#' @param beta_1 a value for the slope parameter in the logistic regression model
+#'
+#' @return joint probability of the observed data in bpd data set,
+#' if the specified parameters are used in a logistic regression model
+calc_prob <- function(beta_0, beta_1, birthweight) {
+  results <- data.frame(
+      beta_0 = beta_0,
+      beta_1 = beta_1,
+      birthweight = birthweight
+    ) %>%
+    mutate(
+      prob_BPD = exp(beta_0 + beta_1 * birthweight) / (1 + exp(beta_0 + beta_1 * birthweight))
+    )
+  
+  return(results)
+}
+
+birthweight_grid <- seq(from = min(bpd$birthweight), to = max(bpd$birthweight), length = 101)
+beta_1_min <- -0.0042291 - 0.005
+beta_1_max <- -0.0042291 + 0.005
+
+betas_grid <- expand.grid(
+  beta_0 = 4.0342913,
+  beta_1 = seq(from = beta_1_min, to = beta_1_max, length = 11)
+)
+
+logistic_preds <- pmap_dfr(betas_grid, calc_prob, birthweight = birthweight_grid)
+logistic_preds <- logistic_preds %>% mutate(
+  MLE = ifelse(abs(beta_1 - -0.0042291) < 0.001, "MLE", "Not MLE")
+)
+
+ggplot() +
+  geom_line(data = logistic_preds,
+    mapping = aes(x = birthweight, y = prob_BPD, color = MLE, group = factor(beta_1))) +
+  geom_point(data = bpd,
+    mapping = aes(x = birthweight, y = BPD),
+    position = position_jitter(width = 0, height = 0.1)) +
+  scale_color_manual(values = c("orange", "cornflowerblue"))
+```
+
+If you take Stat 343, we'll talk more about exactly how to find the MLE's for logistic regression then.
+
+\newpage
+
+## Details of Estimation for Gradient Tree Boosting, Binary Classification
+
+#### Motivation: Logistic transformation of (sum of) regression tree predictions
+
+\begin{align*}
+Y_i &\sim \text{Bernoulli}(p(x_i)) \text{ where} \\
+p(x_i) &= \frac{e^{\text{prediction from a sum of regression trees}}}{1 + e^{\text{prediction from a sum of regression trees}}}
+\end{align*}
+
+#### Formulation in terms of "likelihood"
+
+Let's denote the "prediction from a sum of regression trees" by $\hat{a}_i$
+
+Consider the "likelihood" expressed in terms of the $\hat{a}_i$:
+
+$$\prod_{i: y_i = 1} p(x_i) \prod_{i: y_i = 0} \{1 - p(x_i)\} = \prod_{i: y_i = 1} \frac{e^{\hat{a}_i}}{1 + e^{\hat{a}_i}} \prod_{i: y_i = 0} \frac{1}{1 + e^{\hat{a}_i}}$$
+
+In each boosting iteration, our goal is to update the ensemble's predicted values $\hat{a}_i$ so as to increase this likelihood.
+
+#### Formulation in terms of log-"likelihood"
+
+ * $\log(x)$ is an increasing function of $x$:
+ 
+```{r, echo = FALSE, fig.height=2}
+ggplot(data = data.frame(x = c(0.01, 10)), mapping = aes(x = x)) +
+  stat_function(fun = log, n = 1001) +
+  ylab("log(x)")
+```
+
+ * That means that a choice of the $\hat{a}_i$ that maximizes the likelihood also maximizes the log of the likelihood.
+    * Suppose $L(a) < L(\hat{a}_i)$ for all other values of $a$
+    * Then $\log\{L(a)\} < \log\{L(\hat{a}_i)\}$ for all other values of $a$
+    * (In the plot above, $x$ matches up with $L(a)$)
+ * Instead of thinking about maximizing the likelihood, let's think about maximizing the log of the likelihood.  Two reasons:
+    1. Emotional convenience (we'll get answers that look reasonable, and then we'll feel happier)
+    2. Computational stability (probabilities are very close to 0, and computers are bad at numbers very close to 0; the logarithms are easier for computers to deal with)
+
+The log of the likelihood, expressed in terms of $\hat{a}_i$ is:
+
+\begin{align*}
+&\log\left[\prod_{i: y_i = 1} p(x_i) \prod_{i: y_i = 0} \{1 - p(x_i)\}\right] = \sum_{i: y_i = 1} \log\left[\frac{e^{\hat{a}_i}}{1 + e^{\hat{a}_i}}\right] + \sum_{i: y_i = 0} \log\left[\frac{1}{1 + e^{\hat{a}_i}}\right] \\
+&\qquad = \sum_{i: y_i = 1} \left\{\log\left(e^{\hat{a}_i}\right) - \log(1 + e^{\hat{a}_i})\right\} + \sum_{i: y_i = 0} \left\{\log(1) - \log(1 + e^{\hat{a}_i})\right\} \\
+&\qquad = \sum_{i: y_i = 1} \left\{\hat{a}_i - \log(1 + e^{\hat{a}_i})\right\} + \sum_{i: y_i = 0} \left\{ - \log(1 + e^{\hat{a}_i})\right\}
+\end{align*}
+
+#### Derivatives of the log-likelihood
+
+ * Let's take the derivative of this with respect to $\hat{a}_{i^*}$, for a particular observation number ${i^*}$.
+ * This will tell us how to change our current ensemble prediction $\hat{a}_{i^*}$ for observation ${i^*}$ to increase the probability assigned to that observation.
+
+First, suppose that $y_{i^*} = 1$:
+
+\begin{align*}
+&\frac{\partial}{\partial \hat{a}_{i^*}}\left[ \sum_{i: y_i = 1} \left\{\hat{a}_i - \log(1 + e^{\hat{a}_i})\right\} + \sum_{i: y_i = 0} \left\{ - \log(1 + e^{\hat{a}_i})\right\} \right] \\
+&= \frac{\partial}{\partial \hat{a}_{i^*}}\left\{\hat{a}_{i^*} - \log(1 + e^{\hat{a}_{i^*}})\right\} \\
+&= 1 - \frac{1}{1 + e^{\hat{a}_{i^*}}} e^{\hat{a}_{i^*}} \\
+&= 1 - p(x_{i^*})
+\end{align*}
+
+This is the "residual" $y_{i^*} - p(x_i)$!
+
+ * Always positive (if $y_{i^*} = 1$, always want a higher $\hat{P}(Y_i = 1 \vert x_i)$)
+ * Larger in magnitude the more "incorrect" the predictive probability is.
+
+Second, suppose that $y_{i^*} = 0$:
+
+\begin{align*}
+&\frac{\partial}{\partial \hat{a}_{i^*}}\left[ \sum_{i: y_i = 1} \left\{\hat{a}_i - \log(1 + e^{\hat{a}_i})\right\} + \sum_{i: y_i = 0} \left\{ - \log(1 + e^{\hat{a}_{i^*}})\right\} \right] \\
+&= \frac{\partial}{\partial \hat{a}_{i^*}}\left\{ - \log(1 + e^{\hat{a}_{i^*}})\right\} \\
+&= - \frac{1}{1 + e^{\hat{a}_{i^*}}} e^{\hat{a}_{i^*}} \\
+&= - p(x_{i^*})
+\end{align*}
+
+Again, this is the "residual" $y_{i^*} - p(x_{i^*})$!
+
+ * Always negative (if $y_{i^*} = 0$, always want a smaller $\hat{P}(Y_{i^*} = 1 \vert x_{i^*})$)
+ * Larger in magnitude the more "incorrect" the predictive probability is.
+
+#### Final Procedure: Gradient Tree Boosting
+
+Our ensemble procedure builds up a sum of regression trees $\hat{a}(x)$, which is passed through the logistic transformation to find the estimated probability of being in class 1:
+
+$\hat{P}(Y_i = 1 \vert x_i) = \frac{e^{\hat{a}(x_i)}}{1 + e^{\hat{a}(x_i)}}$
+
+Algorithm:
+
+ 1. Initialize $\hat{a}^{(0)}(x) = 0$ for all $x$.
+ 2. For $b = 1, \ldots, B$:
+    a. Compute the predicted probability of being in class 1 for each observation $i$, based on the ensemble that was created after the previous step: $\hat{P}^{(b-1)}(Y_i = 1 \vert x_i) = \frac{e^{\hat{a}^{(b-1)}(x_i)}}{1 + e^{\hat{a}^{(b-1)}(x_i)}}$
+    b. Fit a regression tree $\hat{g}^{(b)}(x)$ using the residuals $Y_i - \hat{P}^{(b-1)}(Y_i = 1 \vert x_i)$ as the response.
+    c. Update the ensemble by adding in this new model: $\hat{a}^{(b)}(x) = \hat{a}^{(b-1)}(x) + \hat{g}^{(b)}(x)$
+
+*Note:*
+
+ * The above procedure can be thought of as using a linear (first-order Taylor series) approximation to the log-likelihood
+ * xgboost uses a quadratic (second-order Taylor series) approximation
+
+\newpage
+
+### Fit with xgboost
+
+```{r, message = FALSE}
+set.seed(34592)
+class(bpd$BPD)
+
+# Convert BPD variable in bpd data frame to a factor so xgboost knows to
+# treat this as a classification problem.
+bpd <- bpd %>% mutate(BPD = factor(BPD))
+class(bpd$BPD)
+
+library(caret)
+xgb_fit <- train(
+  BPD ~ birthweight,
+  data = bpd,
+  method = "xgbTree",
+  trControl = trainControl(method = "cv", number = 10, returnResamp = "all"),
+  tuneGrid = expand.grid(
+    nrounds = c(5, 10, 20, 30, 40, 50, 100),
+    eta = c(0.001, 0.01, 0.05, 0.1), # learning rate; 0.3 is the default
+    gamma = 0, # minimum loss reduction to make a split; 0 is the default
+    max_depth = 1:3, # how deep are our trees?
+    subsample = c(0.05, 0.1, 0.25, 0.5, 1), # proportion of observations to use in growing each tree
+    colsample_bytree = 1, # proportion of explanatory variables used in each tree
+    min_child_weight = 1 # think of this as how many observations must be in each leaf node
+  )
+)
+
+xgb_fit$results %>% filter(Accuracy == max(Accuracy))
+
+
+
+```
+
+```{r}
+birthweight_grid <- data.frame(birthweight = seq(from = min(bpd$birthweight), to = max(bpd$birthweight), length = 101))
+
+plot_df <- birthweight_grid %>%
+  mutate(
+    bpd_hat = predict(xgb_fit, type = "prob", newdata = birthweight_grid)[, 2]
+  )
+
+ggplot() +
+  geom_line(data = plot_df,
+    mapping = aes(x = birthweight, y = bpd_hat),
+    color = "cornflowerblue") +
+  geom_line(data = logistic_preds %>% filter(MLE == "MLE"),
+    mapping = aes(x = birthweight, y = prob_BPD, group = factor(beta_1)),
+    color = "orange") +
+  geom_point(data = bpd, mapping = aes(x = birthweight, y = as.numeric(as.character(BPD))))
+```
