@@ -23,7 +23,9 @@ This part of the page will be updated with more details and deadlines later.
     * Create an R Markdown document that will have your preliminary/exploratory analyses in it, and write R code there to read in the data file to a data frame.
     * Do a little initial exploration of the data set (a plot or two, examine whether there are missing values, start on any cleanup that needs to be done).
     * Commit, push, and pull often.
-* Some time in the range of Dec 3 to Dec 10: In-class presentations
+* 5:00 PM Fri Nov 30: working code implementing your methods
+* Fri Nov 30, Mon Dec 3, or Tues Dec 4: Draft slides done, let's meet to discuss them!  Book an appointment here: https://calendar.google.com/calendar/selfsched?sstoken=UUFsQ1lfNUJHOHNrfGRlZmF1bHR8NDcxZTFkMTIwNDEwZjI3MDhkZWI2ZTcyNDU5YzY5NzI
+* Dec. 5 and 7 (and Dec 10 if necessary): In-class presentations
 * End of finals period: final submission of write-up pushed to GitHub.
 
 ### Data Sets
@@ -158,7 +160,23 @@ Items one through 6 above should total 10 pages at most, including figures and t
 
 ### Group presentation
 
-Each group will present their project to the class in a 20 to 30 minute presentation.  Each group member will be expected to lead a part of this presentation.
+Each group will present their project to the class in a 15 to 20 minute presentation.  You should prepare slides, or a website with slide-like content to walk through (I have in mind here groups who may want to demo interactive graphics), or similar.  Each group member will be expected to lead a part of this presentation.  The presentation should cover the following topics:
+
+1. Data set and context
+    * A description of the data set, variables involved, and questions you are trying to answer/goals of your analysis.
+
+2. Methods
+    * A brief statement of the "in-class" method you are using
+    * A more detailed statement of the "out-of-class" method you are using
+
+3. Results
+    * Presentation and interpretation of visualizations of results, if applicable
+    * A discussion of how you evaluated method(s)
+        * Train/test splits?
+        * Cross-validation schemes?
+        * Measures of performance? (MSE?  RMSE?  Classification error rate?  Something else?)
+    * A description of how the model(s) did
+    * Conclusions
 
 ### Collaboration on GitHub
 
