@@ -415,17 +415,18 @@ More on Gradient Tree Boosting; Thanksgiving Break
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week13", FALSE, "Week 13: Nov 26 -- 30",
+make_week_box("week13", TRUE, "Week 13: Nov 26 -- 30",
 "
 
 #### Mon, Nov 26
- * Gradient tree boosting with K > 2 classes
+ * Multinomial logistic regression and gradient tree boosting with K > 2 classes: [pdf](materials/20181126_gradient_boosting_multi_class/20181126_gradient_boosting_multi_class.pdf)
+ * Lab 17
 
 #### Wed, Nov 28
- * Splines?  Or time for projects?
+ * Work on projects
 
 #### Fri, Nov 30
- * Splines?  Or time for projects?
+ * Work on projects
 "
 )
 ```
