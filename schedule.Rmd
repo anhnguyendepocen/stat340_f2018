@@ -376,7 +376,7 @@ Chapter 8: Tree-Based Methods
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week11", TRUE, "Week 11: Nov 12 -- 16",
+make_week_box("week11", FALSE, "Week 11: Nov 12 -- 16",
 "
 Gradient Tree Boosting
 
@@ -397,7 +397,7 @@ Gradient Tree Boosting
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week12", TRUE, "Week 12: Nov 19 -- 23 (Thanksgiving)",
+make_week_box("week12", FALSE, "Week 12: Nov 19 -- 23 (Thanksgiving)",
 "
 More on Gradient Tree Boosting; Thanksgiving Break
 
@@ -415,7 +415,7 @@ More on Gradient Tree Boosting; Thanksgiving Break
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week13", TRUE, "Week 13: Nov 26 -- 30",
+make_week_box("week13", FALSE, "Week 13: Nov 26 -- 30",
 "
 
 #### Mon, Nov 26
@@ -446,10 +446,12 @@ Projects and Project Presentations
 ```
 
 ```{r, echo = FALSE, results='asis'}
-make_week_box("week15", FALSE, "Week 15: Dec 10",
+make_week_box("week15", TRUE, "Week 15: Dec 10",
 "
 
 #### Mon, Dec 10
+
+ * Adding T-SNE covariates to original covariates: [pdf](materials/20181210_tsne/Include_tnse_output.pdf)
 "
   )
 ```
